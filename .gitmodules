@@ -1,0 +1,27 @@
+[submodule "vendor/mapnik-vector-tile"]
+	path = vendor/mapnik-vector-tile
+	url = https://github.com/mapbox/mapnik-vector-tile.git
+[submodule "vendor/variant"]
+	path = vendor/variant
+	url = https://github.com/mapbox/variant.git
+[submodule "vendor/protozero"]
+	path = vendor/protozero
+	url = https://github.com/mapbox/protozero.git
+[submodule "vendor/Simple-Web-Server"]
+	path = vendor/Simple-Web-Server
+	url = https://gitlab.com/eidheim/Simple-Web-Server.git
+[submodule "vendor/cxxopts"]
+	path = vendor/cxxopts
+	url = https://github.com/jarro2783/cxxopts.git
+[submodule "vendor/vtzero"]
+	path = vendor/vtzero
+	url = https://github.com/mapbox/vtzero.git
+[submodule "vendor/geometry.hpp"]
+	path = vendor/geometry.hpp
+	url = https://github.com/mapbox/geometry.hpp.git
+[submodule "vendor/asio"]
+	path = vendor/asio
+	url = https://github.com/chriskohlhoff/asio.git
+[submodule "vendor/gzip-hpp"]
+	path = vendor/gzip-hpp
+	url = https://github.com/mapbox/gzip-hpp.git
