@@ -1,0 +1,87 @@
+<Map background-color="#f1f2f2">
+<Style name="landuse_fill">
+    <Rule>
+        <PolygonSymbolizer fill="#00ff00" />
+    </Rule>
+</Style>
+<Style name="water_fill">
+    <Rule>
+        <PolygonSymbolizer fill="#0000ff" />
+    </Rule>
+</Style>
+<Style name="natural_fill">
+    <Rule>
+        <PolygonSymbolizer fill="#00ff00" />
+    </Rule>
+</Style>
+<Style name="physical_line_stroke">
+    <Rule>
+        <LineSymbolizer stroke="#00ff00" stroke-width="1" />
+    </Rule>
+</Style>
+<Style name="roads_stroke">
+    <Rule>
+        <LineSymbolizer stroke="#ff0000" stroke-width="1" />
+    </Rule>
+</Style>
+<Style name="buildings_fill">
+    <Rule>
+        <PolygonSymbolizer fill="#ff0000" />
+    </Rule>
+</Style>
+<Style name="transit_stroke">
+    <Rule>
+        <LineSymbolizer stroke="#ff0000" stroke-width="1" />
+    </Rule>
+</Style>
+<Style name="boundaries_stroke">
+    <Rule>
+        <LineSymbolizer stroke="#000000" stroke-width="1" />
+    </Rule>
+</Style>
+<Style name="places_label">
+    <Rule>
+        <TextSymbolizer
+            face-name="DejaVu Sans Book" size="16" fill="#000000" 
+            halo-fill="white" halo-radius="1"
+            placement="point" allow-overlap="false" justify-alignment="left" clip="false" avoid-edges="true">
+            [name]
+        </TextSymbolizer>
+    </Rule>
+</Style>
+<Style name="roads_label">
+    <Rule>
+        <TextSymbolizer
+            face-name="DejaVu Sans Book" size="10" fill="#000000" 
+            halo-fill="white" halo-radius="1"
+            placement="line" allow-overlap="false" avoid-edges="true">
+            [name]
+        </TextSymbolizer>
+    </Rule>
+</Style>
+<Style name="physical_point_label">
+    <Rule>
+        <TextSymbolizer
+            face-name="DejaVu Sans Book" size="15" fill="black" 
+            halo-fill="white" halo-radius="1"
+            placement="point" allow-overlap="false">
+            [name]
+        </TextSymbolizer>
+    </Rule>
+</Style>
+<Style name="physical_line_label">
+    <Rule>
+        <TextSymbolizer
+            face-name="DejaVu Sans Book" size="18" fill="#428dc7" 
+            halo-fill="#184d87" halo-radius="1"
+            placement="line" allow-overlap="false">
+        [name]
+        </TextSymbolizer>
+    </Rule>
+</Style>
+<Style name="mask_fill">
+    <Rule>
+        <PolygonSymbolizer fill="#000000" />
+    </Rule>
+</Style>
+</Map>

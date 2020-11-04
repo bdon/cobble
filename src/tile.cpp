@@ -10,7 +10,7 @@
 #include "vtzero/vector_tile.hpp"
 
 namespace cbbl {
-mapnik::image_rgba8 render(int z, int x, int y, int tile_scale, const protozero::data_view &data, int dz, int dx, int dy, int metatile_zdiff) {
+mapnik::image_rgba8 render(const std::string &map_dir, int z, int x, int y, int tile_scale, const protozero::data_view &data, int dz, int dx, int dy, int metatile_zdiff) {
     int dim = 256 * tile_scale * (1 << metatile_zdiff);
     mapnik::Map map(dim,dim,mapnik::MAPNIK_GMERC_PROJ);
     map.set_buffer_size(64 * tile_scale);
@@ -23,7 +23,7 @@ mapnik::image_rgba8 render(int z, int x, int y, int tile_scale, const protozero:
         datasources[name] = std::make_shared<mapnik::vector_tile_impl::tile_datasource_pbf>(layer_reader,dx,dy,dz,false);
     }
 
-    std::ifstream in("assets/styles/style.layers");
+    std::ifstream in(map_dir + "/layers.txt");
     std::string line;
     while (std::getline(in,line)) {
         std::istringstream iss(line);
@@ -37,7 +37,7 @@ mapnik::image_rgba8 render(int z, int x, int y, int tile_scale, const protozero:
         }
     }
 
-    mapnik::load_map(map,"assets/styles/style.xml");
+    mapnik::load_map(map,map_dir + "/map.xml");
     auto bbox = mapnik::vector_tile_impl::tile_mercator_bbox(x,y,z);
     map.zoom_to_box(bbox);
 

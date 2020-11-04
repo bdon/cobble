@@ -13,7 +13,7 @@ int main(int argc, char **argv)
     if (args[1] == "tile") {
         ifstream stream(args[2],std::ios_base::in|std::ios_base::binary);
         std::string buffer(std::istreambuf_iterator<char>(stream.rdbuf()),(std::istreambuf_iterator<char>()));
-        auto img = cbbl::render(0,0,0,2,buffer,0,0,0,2);
+        auto img = cbbl::render("debug",0,0,0,2,buffer,0,0,0,2);
         mapnik::save_to_file(img ,args[3],"png");
     } else if (args[1] == "serve") {
         cmdServe(argc,argv);

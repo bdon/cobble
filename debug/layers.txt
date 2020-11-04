@@ -1,0 +1,14 @@
+landuse landuse_fill
+water water_fill
+natural natural_fill
+physical_line physical_line_stroke
+roads roads_stroke
+buildings buildings_fill
+transit transit_stroke
+boundaries boundaries_stroke 
+places places_label
+roads roads_label
+poi poi_label
+physical_point physical_point_label
+physical_line physical_line_label
+mask mask_fill

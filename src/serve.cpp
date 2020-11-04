@@ -51,42 +51,42 @@ void cmdServe(int argc, char * argv[]) {
     cxxopts::Options cmd_options("SERVE", "Serve raster tiles");
     cmd_options.add_options()
         ("v,verbose", "Verbose output")
-        ("cors", "Allow all CORS origins")
         ("cmd", "Command to run", cxxopts::value<string>())
-        ("tile_url", "Source tile URL", cxxopts::value<string>())
+        ("source", "Source e.g. localhost:8080, example.mbtiles", cxxopts::value<string>())
+        ("cors", "Allow all CORS origins")
         ("port", "HTTP port", cxxopts::value<int>())
         ("threads", "Number of rendering threads", cxxopts::value<int>())
+        ("map", "directory of map style", cxxopts::value<string>())
       ;
 
-
-
+    cmd_options.parse_positional({"cmd","source"});
     auto result = cmd_options.parse(argc, argv);
-    bool cors = result.count("cors");
-    auto tile_url = result["tile_url"].as<string>();
 
     int threads = 4;
-    if (result.count("threads")) {
-        threads = result["threads"].as<int>();
-    }
-
-    int port = 8090;
-    if (result.count("port")) {
-        port = result["port"].as<int>();
-    }
-
-    HttpServer server;
-    server.config.port = port;
-
+    if (result.count("threads")) threads = result["threads"].as<int>();
     asio::thread_pool pool(threads);
 
-    cout << "tile url: " << tile_url << " with " << threads << " threads" << endl;
+    HttpServer server;
+    int port = 8090;
+    if (result.count("port")) port = result["port"].as<int>();
+    server.config.port = port;
 
-    mapnik::freetype_engine::register_fonts("assets/fonts");
+    bool cors = result.count("cors");
+    auto source_str = result["source"].as<string>();
 
-    server.resource["^/([0-9]+)/([0-9]+)/([0-9]+)(@([2-3])x)?.png$"]["GET"] = [cors,&pool, tile_url](shared_ptr<HttpServer::Response> response, shared_ptr<HttpServer::Request> request) {
+    string map_dir = "debug";
+    if (result.count("map")) map_dir = result["map"].as<string>();
 
+    if (map_dir == "debug") {
+        mapnik::freetype_engine::register_fonts("/usr/local/lib/mapnik/fonts");
+    } else {
+        mapnik::freetype_engine::register_fonts(map_dir + "/fonts");
+    }
+
+    cout << "source: " << source_str << " with " << threads << " threads on port " << port << endl;
+
+    server.resource["^/([0-9]+)/([0-9]+)/([0-9]+)(@([2-3])x)?.png$"]["GET"] = [cors,&pool,source_str,map_dir](shared_ptr<HttpServer::Response> response, shared_ptr<HttpServer::Request> request) {
         // displaytile, metatile and datatile
-
         // the URL params are the Display tiles
         int32_t display_z = stoi(request->path_match[1]);
         int32_t display_x = stoi(request->path_match[2]);
@@ -114,8 +114,8 @@ void cmdServe(int argc, char * argv[]) {
                 vector<pair<Tile,shared_ptr<HttpServer::Response>>> v;
                 v.emplace_back(display_tile,response);
                 mState.emplace(meta_tile,move(v));
-                asio::post(pool, [meta_tile,tile_url,cors, metatile_zdiff] {
-                    if (!tSource) tSource = cbbl::CreateSource(tile_url);
+                asio::post(pool, [meta_tile,source_str,map_dir,cors,metatile_zdiff] {
+                    if (!tSource) tSource = cbbl::CreateSource(source_str);
                     chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
                     // calculate the datatile for this metatile
                     int data_z = meta_tile.z;
@@ -129,7 +129,7 @@ void cmdServe(int argc, char * argv[]) {
                     Tile data_tile{data_z,data_x,data_y,meta_tile.scale};
                     auto tile_data = tSource->fetch(data_z,data_x,data_y);
                     if(tile_data->ok) {
-                        auto img = cbbl::render(meta_tile.z,meta_tile.x,meta_tile.y,meta_tile.scale,tile_data->body,data_tile.z,data_tile.x,data_tile.y,metatile_zdiff); // string might be inefficient
+                        auto img = cbbl::render(map_dir,meta_tile.z,meta_tile.x,meta_tile.y,meta_tile.scale,tile_data->body,data_tile.z,data_tile.x,data_tile.y,metatile_zdiff); // string might be inefficient
 
                         chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
                         cout << meta_tile.z << "/" << meta_tile.x << "/" << meta_tile.y <<  "@" << meta_tile.scale << ":" << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() << " ms" << endl;
