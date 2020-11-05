@@ -190,46 +190,44 @@ void cmdServe(int argc, char * argv[]) {
     };
 
     server.resource["^/$"]["GET"] = [](shared_ptr<HttpServer::Response> response, shared_ptr<HttpServer::Request> request) {
-        try {
-            SimpleWeb::CaseInsensitiveMultimap header;
-            auto ifs = make_shared<ifstream>();
-            ifs->open("index.html", ifstream::in | ios::binary | ios::ate);
-
-            if(*ifs) {
-                auto length = ifs->tellg();
-                ifs->seekg(0, ios::beg);
-
-                header.emplace("Content-Length", to_string(length));
-                response->write(header);
-
-                // Trick to define a recursive function within this scope (for example purposes)
-                class FileServer {
-                public:
-                  static void read_and_send(const shared_ptr<HttpServer::Response> &response, const shared_ptr<ifstream> &ifs) {
-                    // Read and send 128 KB at a time
-                    static vector<char> buffer(131072); // Safe when server is running on one thread
-                    streamsize read_length;
-                    if((read_length = ifs->read(&buffer[0], static_cast<streamsize>(buffer.size())).gcount()) > 0) {
-                      response->write(&buffer[0], read_length);
-                      if(read_length == static_cast<streamsize>(buffer.size())) {
-                        response->send([response, ifs](const SimpleWeb::error_code &ec) {
-                          if(!ec)
-                            read_and_send(response, ifs);
-                          else
-                            cerr << "Connection interrupted" << endl;
-                        });
-                      }
-                    }
-                  }
-                };
-                FileServer::read_and_send(response, ifs);
+        const char * page = R"HTMLLITERAL(
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.6.0/dist/leaflet.css"
+   integrity="sha512-xwE/Az9zrjBIphAcBb3F6JVqxf46+CDLwfLMHloNu6KEQCAWi6HcDUbeOfBIptF7tcCzusKFjFw2yuvEpDL9wQ=="
+   crossorigin=""/>
+        <script src="https://unpkg.com/leaflet@1.6.0/dist/leaflet.js"
+           integrity="sha512-gZwIG9x3wUXg2hdXF6+rVkLF/0Vi9U8D2Ntg4Ga5I5BZpVkVxlJWbSQtXPSiUTtC0TjtGOmxa1AJPuV0CPthew=="
+           crossorigin=""></script>
+        <script src="https://cdn.protomaps.com/leaflet-hash/leaflet-hash.js"></script>
+        <style>
+            body, #map {
+                height:100vh;
+                margin:0px;
             }
-            else
-                throw invalid_argument("could not read file");
-        }
-        catch(const exception &e) {
-            response->write(SimpleWeb::StatusCode::client_error_bad_request, "Could not open path " + request->path + ": " + e.what());
-        }
+        </style>
+    </head>
+    <body>
+        <div id="map"></div>
+        <script>
+            var ratio = '';
+            if (window.devicePixelRatio > 2) ratio = '@3x';
+            else if (window.devicePixelRatio == 2) ratio = '@2x';
+            var map = L.map('map').setView([0,0],1);
+            var hash = new L.Hash(map)
+            L.tileLayer('/{z}/{x}/{y}{r}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+                r: ratio, 
+                maxZoom: 21
+            }).addTo(map);
+        </script>
+    </body>
+</html>
+)HTMLLITERAL";
+        response->write(page);
     };
 
     server.start();
