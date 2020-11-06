@@ -10,5 +10,10 @@ Cobble serves raster tiles through an embedded HTTP server; with a given set of 
 * Meta-tiles: tiles are rendered in batches; by default one vector tile is rendered as 4x4 raster tiles. This is necessary for label placement across tiles.
 * Pixel density: tiles can rendered at 72 dpi, @2x and @3x resolutions.
 
-## See also
+## Alternatives
 * [mod_tile](https://github.com/openstreetmap/mod_tile)
+* [tirex](https://github.com/openstreetmap/tirex)
+* [TileStache](http://tilestache.org)
+
+## Other Stuff
+* [The smallest 256x256 single-color PNG file](https://www.mjt.me.uk/posts/smallest-png/)
