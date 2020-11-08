@@ -81,7 +81,7 @@
 </Style>
 <Style name="mask_fill">
     <Rule>
-        <PolygonSymbolizer fill="#000000" />
+        <PolygonSymbolizer fill="#dddddd" />
     </Rule>
 </Style>
 </Map>
