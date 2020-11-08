@@ -1,4 +1,5 @@
 #include <fstream>
+#include <regex>
 #include "cxxopts.hpp"
 #define USE_STANDALONE_ASIO true
 #include "server_http.hpp"
@@ -73,6 +74,10 @@ void cmdServe(int argc, char * argv[]) {
 
     bool cors = result.count("cors");
     auto source_str = result["source"].as<string>();
+
+    auto source = cbbl::CreateSource(source_str);
+    auto bounds = source->bounds();
+    auto center = source->center();
 
     string map_dir = "debug";
     if (result.count("map")) map_dir = result["map"].as<string>();
@@ -189,8 +194,8 @@ void cmdServe(int argc, char * argv[]) {
         response->write(ss.str());
     };
 
-    server.resource["^/$"]["GET"] = [](shared_ptr<HttpServer::Response> response, shared_ptr<HttpServer::Request> request) {
-        const char * page = R"HTMLLITERAL(
+    server.resource["^/$"]["GET"] = [center,bounds](shared_ptr<HttpServer::Response> response, shared_ptr<HttpServer::Request> request) {
+        string page = R"HTMLLITERAL(
 <!DOCTYPE html>
 <html>
     <head>
@@ -216,17 +221,25 @@ void cmdServe(int argc, char * argv[]) {
             var ratio = '';
             if (window.devicePixelRatio > 2) ratio = '@3x';
             else if (window.devicePixelRatio == 2) ratio = '@2x';
-            var map = L.map('map').setView([0,0],1);
+            var map = L.map('map').setView([$CENTER_Y,$CENTER_X],$CENTER_ZOOM);
             var hash = new L.Hash(map)
             L.tileLayer('/{z}/{x}/{y}{r}.png', {
                 attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
                 r: ratio, 
-                maxZoom: 21
+                maxZoom: 21,
+                bounds: [[$MIN_Y,$MIN_X],[$MAX_Y,$MAX_X]]
             }).addTo(map);
         </script>
     </body>
 </html>
 )HTMLLITERAL";
+        page = regex_replace(page, regex("\\$CENTER_X"), get<0>(center));
+        page = regex_replace(page, regex("\\$CENTER_Y"), get<1>(center));
+        page = regex_replace(page, regex("\\$CENTER_ZOOM"), get<2>(center));
+        page = regex_replace(page, regex("\\$MIN_X"), get<0>(bounds));
+        page = regex_replace(page, regex("\\$MIN_Y"), get<1>(bounds));
+        page = regex_replace(page, regex("\\$MAX_X"), get<2>(bounds));
+        page = regex_replace(page, regex("\\$MAX_Y"), get<3>(bounds));
         response->write(page);
     };
 

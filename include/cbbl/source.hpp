@@ -20,6 +20,8 @@ class Source {
    public:
       virtual const std::shared_ptr<TileData> fetch(int z, int x, int y) = 0;
       virtual ~Source() {}
+      virtual const std::tuple<std::string,std::string,std::string> center() { return {"0","0","0"}; };
+      virtual const std::tuple<std::string,std::string,std::string,std::string> bounds() { return {"-180","-90","180","90"}; };
 };
 
 std::unique_ptr<Source> CreateSource(const std::string &s);
@@ -32,7 +34,9 @@ class MbtilesSource : public Source {
     public:
         MbtilesSource(const std::string &path);
         ~MbtilesSource(); 
-        const std::shared_ptr<TileData> fetch(int z, int x, int y);
+        const std::shared_ptr<TileData> fetch(int z, int x, int y) override;
+        const std::tuple<std::string,std::string,std::string> center() override;
+        const std::tuple<std::string,std::string,std::string,std::string> bounds() override;
     private:
         sqlite3 * db;
         sqlite3_stmt * stmt;
@@ -43,7 +47,7 @@ class HttpSource : public Source {
     public:
         HttpSource(const std::string &tile_url);
         ~HttpSource();
-        const std::shared_ptr<TileData> fetch(int z, int x, int y);
+        const std::shared_ptr<TileData> fetch(int z, int x, int y) override;
 
     private:
         SimpleWeb::Client<SimpleWeb::HTTP> client;
