@@ -16,6 +16,8 @@ There is a very basic Mapnik style in the `debug` directory. You can download pa
 * [mod_tile](https://github.com/openstreetmap/mod_tile)
 * [tirex](https://github.com/openstreetmap/tirex)
 * [TileStache](http://tilestache.org)
+* [kosmtik](https://github.com/kosmtik/kosmtik)
+* [TileMill](https://github.com/tilemill-project/tilemill)
 
 ## Other Stuff
 * [The smallest 256x256 single-color PNG file](https://www.mjt.me.uk/posts/smallest-png/)
