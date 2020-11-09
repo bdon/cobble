@@ -4,6 +4,8 @@ Render vector tiles to raster images with [Mapnik](https://github.com/mapnik/map
 Cobble serves raster tiles through an embedded HTTP server; with a given set of vector tiles: 
 
     cbbl serve dataset.mbtiles
+    
+There is a very basic Mapnik style in the `debug` directory. You can download packages of vector tiles based on fresh OpenStreetMap data at [Protomaps Map Bundles](http://protomaps.com/bundles). Make sure to choose the "mbtiles" output format.
 
 ## Key features
 
