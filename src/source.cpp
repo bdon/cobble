@@ -96,4 +96,25 @@ MbtilesSource::~MbtilesSource() {
     sqlite3_finalize(stmt);
     sqlite3_close(db);
 }
+
+MbtilesSource::Iterator::Iterator(MbtilesSource &src) {
+    sqlite3_prepare_v2(src.db,  "SELECT zoom_level, tile_column, tile_row, tile_data FROM tiles", -1, &stmt, 0);
+}
+
+bool MbtilesSource::Iterator::next() {
+    if (SQLITE_ROW == sqlite3_step(stmt)) {
+        z = sqlite3_column_int(stmt,0);
+        x = sqlite3_column_int(stmt,1);
+        y = sqlite3_column_int(stmt,2);
+        const char* res = (char *)sqlite3_column_blob(stmt,3);
+        int num_bytes = sqlite3_column_bytes(stmt,3);
+        data = gzip::decompress(res,num_bytes);
+        return true;
+    }
+    return false;
+}
+
+MbtilesSource::Iterator::~Iterator() {
+    sqlite3_finalize(stmt);
+}
 }

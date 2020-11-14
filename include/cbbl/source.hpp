@@ -32,11 +32,28 @@ class FileSource : public Source {
 
 class MbtilesSource : public Source {
     public:
+        class Iterator {
+            public:
+            Iterator(MbtilesSource &src);
+            ~Iterator();
+            bool next();
+
+            int z;
+            int x;
+            int y;
+            std::string data; // already decompressed
+
+            private:
+            sqlite3_stmt *stmt;
+        };
+
         MbtilesSource(const std::string &path);
         ~MbtilesSource(); 
         const std::shared_ptr<TileData> fetch(int z, int x, int y) override;
         const std::tuple<std::string,std::string,std::string> center() override;
         const std::tuple<std::string,std::string,std::string,std::string> bounds() override;
+
+
     private:
         sqlite3 * db;
         sqlite3_stmt * stmt;
