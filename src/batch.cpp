@@ -1,10 +1,11 @@
 #include <set>
 #include "cxxopts.hpp"
+#include "boost/filesystem.hpp"
 #include "mapnik/font_engine_freetype.hpp"
 #include "mapnik/image_view.hpp"
 #include "cbbl/source.hpp"
 #include "cbbl/tile.hpp"
-#include "boost/filesystem.hpp"
+#include "cbbl/viewer.hpp"
 
 using namespace std;
 
@@ -74,10 +75,17 @@ void cmdBatch(int argc, char * argv[]) {
                     created_dirs.insert(zx_dir);
                 }
                 ofstream outfile;
-                outfile.open(output + "/" + to_string(display_z) + "/" + to_string(display_x) + "/" + to_string(display_y) + ".png");
+                outfile.open(output + "/" + to_string(display_z) + "/" + to_string(display_x) + "/" + to_string(display_y) + "@2x.png");
                 outfile << buf << endl;
                 outfile.close();
             }
         }
     }
+
+    auto bounds = source.bounds();
+    auto center = source.center();
+    ofstream index;
+    index.open(output + "/index.html");
+    index<< cbbl::viewer(center,bounds) << endl;
+    index.close();
 }
