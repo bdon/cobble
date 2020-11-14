@@ -1,5 +1,10 @@
+#include <set>
 #include "cxxopts.hpp"
+#include "mapnik/font_engine_freetype.hpp"
+#include "mapnik/image_view.hpp"
 #include "cbbl/source.hpp"
+#include "cbbl/tile.hpp"
+#include "boost/filesystem.hpp"
 
 using namespace std;
 
@@ -9,7 +14,8 @@ void cmdBatch(int argc, char * argv[]) {
         ("v,verbose", "Verbose output")
         ("cmd", "Command to run", cxxopts::value<string>())
         ("source", "Source e.g. example.mbtiles", cxxopts::value<string>())
-        ("destination", "Output destination e.g. output.mbtiles", cxxopts::value<string>())
+        ("destination", "Output dir or destination e.g. output, output.mbtiles", cxxopts::value<string>())
+        ("overwrite", "Overwrite output", cxxopts::value<bool>())
         ("threads", "Number of rendering threads", cxxopts::value<int>())
         ("map", "directory of map style", cxxopts::value<string>())
       ;
@@ -17,11 +23,61 @@ void cmdBatch(int argc, char * argv[]) {
     cmd_options.parse_positional({"cmd","source","destination"});
     auto result = cmd_options.parse(argc, argv);
 
+    // set up output
+    auto output = result["destination"].as<string>();
+    if (boost::filesystem::exists(output) && !result.count("overwrite")) {
+        cout << "Target output " << output << " exists." << endl;
+        exit(1);
+    }
+    if (boost::filesystem::exists(output)) {
+        boost::filesystem::remove_all(output);
+    }
+
+    string map_dir = "debug";
+    if (result.count("map")) map_dir = result["map"].as<string>();
+    if (map_dir == "debug") {
+        mapnik::freetype_engine::register_fonts("/usr/local/lib/mapnik/fonts");
+    } else {
+        mapnik::freetype_engine::register_fonts(map_dir + "/fonts");
+    }
+
     auto source = cbbl::MbtilesSource(result["source"].as<string>());
-
     auto iter = cbbl::MbtilesSource::Iterator(source);
+    boost::filesystem::create_directory(output);
 
+    size_t scale = 2;
+    set<string> created_dirs; // TODO: make this threadsafe
     while (iter.next()) {
         cout << iter.z << " " << iter.x << " " << iter.y << endl;
+        int data_z = iter.z;
+        int data_x = iter.x;
+        int data_y = iter.y;
+        int meta_z = data_z;
+        int meta_x = data_x;
+        int meta_y = data_y;
+        auto img = cbbl::render(map_dir,meta_z,meta_x,meta_y,scale,iter.data,data_z,data_x,data_y,2);
+        for (int i = 0; i < 4; i++) {
+            for (int j = 0; j < 4; j++) {
+                mapnik::image_view_rgba8 cropped{256*scale*i,256*scale*j,256*scale,256*scale,img};
+                auto buf = mapnik::save_to_string(cropped,"png");
+                int display_z = data_z + 2;
+                int display_x = data_x * 4 + i;
+                int display_y = data_y * 4 + j;
+                string z_dir = output + "/" + to_string(display_z);
+                if (!created_dirs.count(z_dir)) {
+                    boost::filesystem::create_directory(z_dir);
+                    created_dirs.insert(z_dir);
+                } 
+                string zx_dir = output + "/" + to_string(display_z) + "/" + to_string(display_x);
+                if (!created_dirs.count(zx_dir)) {
+                    boost::filesystem::create_directory(zx_dir);
+                    created_dirs.insert(zx_dir);
+                }
+                ofstream outfile;
+                outfile.open(output + "/" + to_string(display_z) + "/" + to_string(display_x) + "/" + to_string(display_y) + ".png");
+                outfile << buf << endl;
+                outfile.close();
+            }
+        }
     }
 }

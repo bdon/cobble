@@ -26,9 +26,9 @@ if(APPLE)
     # custom Boost goes before macports
     include_directories(../etc/mapnik-boost/build/include)
     include_directories(/opt/local/include)
+    link_directories(../etc/mapnik-boost/build/lib)
     link_directories(/opt/local/lib)
 endif()
 
-
 add_executable(cbbl src/cmd.cpp src/tile.cpp src/source.cpp src/serve.cpp src/batch.cpp)
-target_link_libraries(cbbl mapnik icuuc sqlite3 z)
+target_link_libraries(cbbl mapnik icuuc sqlite3 z boost_filesystem)
