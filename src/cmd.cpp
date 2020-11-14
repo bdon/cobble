@@ -15,6 +15,8 @@ int main(int argc, char **argv)
         std::string buffer(std::istreambuf_iterator<char>(stream.rdbuf()),(std::istreambuf_iterator<char>()));
         auto img = cbbl::render("debug",0,0,0,2,buffer,0,0,0,2);
         mapnik::save_to_file(img ,args[3],"png");
+    } else if (args[1] == "batch") {
+        cmdBatch(argc,argv);
     } else if (args[1] == "serve") {
         cmdServe(argc,argv);
     } else {

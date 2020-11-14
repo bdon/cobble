@@ -30,5 +30,5 @@ if(APPLE)
 endif()
 
 
-add_executable(cbbl src/cmd.cpp src/tile.cpp src/source.cpp src/serve.cpp)
+add_executable(cbbl src/cmd.cpp src/tile.cpp src/source.cpp src/serve.cpp src/batch.cpp)
 target_link_libraries(cbbl mapnik icuuc sqlite3 z)
