@@ -16,6 +16,10 @@ There is a very basic Mapnik style in the `debug` directory. You can download pa
 
 Linux: libcairo-dev libtiff-dev libharfbuzz-dev
 
+## Build
+
+* Mapnik is expected to be an a sibling directory
+* Configure your mapnik build with `./configure FULL_LIB_PATH=False`
 
 ## Alternatives
 * [mod_tile](https://github.com/openstreetmap/mod_tile)
