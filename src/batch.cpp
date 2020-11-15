@@ -3,6 +3,7 @@
 #include "boost/filesystem.hpp"
 #include "mapnik/font_engine_freetype.hpp"
 #include "mapnik/image_view.hpp"
+#include "asio/thread_pool.hpp"
 #include "cbbl/source.hpp"
 #include "cbbl/tile.hpp"
 #include "cbbl/viewer.hpp"
@@ -46,13 +47,16 @@ void cmdBatch(int argc, char * argv[]) {
     auto iter = cbbl::MbtilesSource::Iterator(source);
     boost::filesystem::create_directory(output);
 
-
+    int threads = 4;
+    if (result.count("threads")) threads = result["threads"].as<int>();
+    asio::thread_pool pool(threads);
 
     chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
 
     size_t scale = 2;
     int tiles_rendered = 0;
-    set<string> created_dirs; // TODO: make this threadsafe
+    set<string> created_dirs;
+    mutex created_dirs_mutex;
     while (iter.next()) {
         int data_z = iter.z;
         int data_x = iter.x;
@@ -60,33 +64,41 @@ void cmdBatch(int argc, char * argv[]) {
         int meta_z = data_z;
         int meta_x = data_x;
         int meta_y = data_y;
-        auto img = cbbl::render(map_dir,meta_z,meta_x,meta_y,scale,iter.data,data_z,data_x,data_y,2);
-        for (int i = 0; i < 4; i++) {
-            for (int j = 0; j < 4; j++) {
-                mapnik::image_view_rgba8 cropped{256*scale*i,256*scale*j,256*scale,256*scale,img};
-                auto buf = mapnik::save_to_string(cropped,"png");
-                int display_z = data_z + 2;
-                int display_x = data_x * 4 + i;
-                int display_y = data_y * 4 + j;
-                string z_dir = output + "/" + to_string(display_z);
-                if (!created_dirs.count(z_dir)) {
-                    boost::filesystem::create_directory(z_dir);
-                    created_dirs.insert(z_dir);
-                } 
-                string zx_dir = output + "/" + to_string(display_z) + "/" + to_string(display_x);
-                if (!created_dirs.count(zx_dir)) {
-                    boost::filesystem::create_directory(zx_dir);
-                    created_dirs.insert(zx_dir);
+        string data = iter.data;
+
+        asio::post(pool, [&output,&map_dir,scale,data_z,data_x,data_y,data,meta_z,meta_x,meta_y,&created_dirs,&created_dirs_mutex] {
+            auto img = cbbl::render(map_dir,meta_z,meta_x,meta_y,scale,data,data_z,data_x,data_y,2);
+            for (int i = 0; i < 4; i++) {
+                for (int j = 0; j < 4; j++) {
+                    mapnik::image_view_rgba8 cropped{256*scale*i,256*scale*j,256*scale,256*scale,img};
+                    auto buf = mapnik::save_to_string(cropped,"png");
+                    int display_z = data_z + 2;
+                    int display_x = data_x * 4 + i;
+                    int display_y = data_y * 4 + j;
+                    string z_dir = output + "/" + to_string(display_z);
+                    string zx_dir = output + "/" + to_string(display_z) + "/" + to_string(display_x);
+                    {
+                        lock_guard<mutex> lock(created_dirs_mutex);
+                        if (!created_dirs.count(z_dir)) {
+                            boost::filesystem::create_directory(z_dir);
+                            created_dirs.insert(z_dir);
+                        } 
+                        if (!created_dirs.count(zx_dir)) {
+                            boost::filesystem::create_directory(zx_dir);
+                            created_dirs.insert(zx_dir);
+                        }
+                    }
+                    ofstream outfile;
+                    outfile.open(output + "/" + to_string(display_z) + "/" + to_string(display_x) + "/" + to_string(display_y) + "@2x.png");
+                    outfile << buf << endl;
+                    outfile.close();
                 }
-                ofstream outfile;
-                outfile.open(output + "/" + to_string(display_z) + "/" + to_string(display_x) + "/" + to_string(display_y) + "@2x.png");
-                outfile << buf << endl;
-                outfile.close();
-                tiles_rendered++;
             }
-        }
+        });
+        tiles_rendered += 16;
     }
 
+    pool.join();
     auto bounds = source.bounds();
     auto center = source.center();
     ofstream index;
