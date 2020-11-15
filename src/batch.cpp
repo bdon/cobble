@@ -20,10 +20,30 @@ void cmdBatch(int argc, char * argv[]) {
         ("overwrite", "Overwrite output", cxxopts::value<bool>())
         ("threads", "Number of rendering threads", cxxopts::value<int>())
         ("map", "directory of map style", cxxopts::value<string>())
+        ("maxzoom", "maximum display zoom level (default 16, maximum 21", cxxopts::value<int>())
+        ("resolutions", "comma-separated resolutions: default 1,2", cxxopts::value<vector<int>>())
       ;
 
     cmd_options.parse_positional({"cmd","source","destination"});
     auto result = cmd_options.parse(argc, argv);
+
+    int maxzoom = 16;
+    if (result.count("maxzoom")) {
+        maxzoom = result["maxzoom"].as<int>();
+        if (maxzoom > 21) {
+            cout << "max supported zoom is 21." << endl;
+            exit(1);
+        }
+    }
+
+    vector<int> resolutions = {1,2};
+    if (result.count("resolutions")) {
+        resolutions = result["resolutions"].as<vector<int>>();
+    }
+
+    cout << "rendering zooms 0-" << maxzoom << " at resolutions";
+    for (auto r : resolutions) cout << " @" << r << "x";
+    cout << endl;
 
     // set up output
     auto output = result["destination"].as<string>();
