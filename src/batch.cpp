@@ -46,10 +46,14 @@ void cmdBatch(int argc, char * argv[]) {
     auto iter = cbbl::MbtilesSource::Iterator(source);
     boost::filesystem::create_directory(output);
 
+
+
+    chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
+
     size_t scale = 2;
+    int tiles_rendered = 0;
     set<string> created_dirs; // TODO: make this threadsafe
     while (iter.next()) {
-        cout << iter.z << " " << iter.x << " " << iter.y << endl;
         int data_z = iter.z;
         int data_x = iter.x;
         int data_y = iter.y;
@@ -78,6 +82,7 @@ void cmdBatch(int argc, char * argv[]) {
                 outfile.open(output + "/" + to_string(display_z) + "/" + to_string(display_x) + "/" + to_string(display_y) + "@2x.png");
                 outfile << buf << endl;
                 outfile.close();
+                tiles_rendered++;
             }
         }
     }
@@ -86,6 +91,9 @@ void cmdBatch(int argc, char * argv[]) {
     auto center = source.center();
     ofstream index;
     index.open(output + "/index.html");
-    index<< cbbl::viewer(center,bounds) << endl;
+    index << cbbl::viewer(center,bounds) << endl;
     index.close();
+
+    chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
+    cout << "Rendered " << tiles_rendered << " tiles in " << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() / 1000.0 << " seconds." << endl;
 }
