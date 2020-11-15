@@ -92,6 +92,19 @@ const shared_ptr<TileData> MbtilesSource::fetch(int z, int x, int y) {
     }
 }
 
+const vector<pair<int,int>> MbtilesSource::zoom_count() {
+    sqlite3_stmt *count_stmt;
+    sqlite3_prepare_v2(db, "SELECT zoom_level, count(*) FROM tiles GROUP BY zoom_level", -1, &count_stmt, 0);
+    vector<pair<int,int>> retval;
+    while (SQLITE_ROW == sqlite3_step(count_stmt)) {
+        int zoom_level = sqlite3_column_int(count_stmt,0);
+        int count = sqlite3_column_int(count_stmt,1);
+        retval.push_back({zoom_level,count});
+    }
+    sqlite3_finalize(count_stmt);
+    return retval;
+}
+
 MbtilesSource::~MbtilesSource() {
     sqlite3_finalize(stmt);
     sqlite3_close(db);

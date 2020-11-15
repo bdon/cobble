@@ -53,6 +53,7 @@ class MbtilesSource : public Source {
         const std::tuple<std::string,std::string,std::string> center() override;
         const std::tuple<std::string,std::string,std::string,std::string> bounds() override;
 
+        const std::vector<std::pair<int,int>> zoom_count();
 
     private:
         sqlite3 * db;
