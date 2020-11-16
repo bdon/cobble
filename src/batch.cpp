@@ -57,7 +57,7 @@ void cmdBatch(int argc, char * argv[]) {
         if (zoom_level == 0) {
             total_tiles += (16 + 4 + 1) * num_resolutions;
         } else {
-            total_tiles += 16 * num_resolutions;
+            total_tiles += count * 16 * num_resolutions;
         }
     }
 
