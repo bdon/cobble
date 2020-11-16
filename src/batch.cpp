@@ -50,14 +50,20 @@ void cmdBatch(int argc, char * argv[]) {
     int total_tiles = 0;
     int num_resolutions = resolutions.size();
 
-    // TODO account for maxzoom
     for (auto p : source.zoom_count()) {
         int zoom_level = get<0>(p);
         int count = get<1>(p);
         if (zoom_level == 0) {
             total_tiles += (16 + 4 + 1) * num_resolutions;
+        } else if (zoom_level < 14) {
+            if (zoom_level <= maxzoom - 2) {
+                total_tiles += count * 16 * num_resolutions;
+            }
         } else {
-            total_tiles += count * 16 * num_resolutions;
+            // zoom level == 14
+            for (int z = 16; z <= maxzoom; z++) {
+                total_tiles += count * (2 << (z - 16)) * 16 * num_resolutions;
+            }
         }
     }
 
