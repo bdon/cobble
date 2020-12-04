@@ -7,9 +7,18 @@
 
 using namespace std;
 
+void printHelp() {
+    cout << "Command not recognized." << endl;
+    cout << "Commands: tile | batch | serve" << endl;
+    exit(1);
+}
+
 int main(int argc, char **argv)
 {
     vector<string> args(argv, argv+argc);
+    if (args.size() < 2) {
+        printHelp();
+    }
     if (args[1] == "tile") {
         ifstream stream(args[2],std::ios_base::in|std::ios_base::binary);
         std::string buffer(std::istreambuf_iterator<char>(stream.rdbuf()),(std::istreambuf_iterator<char>()));
@@ -20,8 +29,7 @@ int main(int argc, char **argv)
     } else if (args[1] == "serve") {
         cmdServe(argc,argv);
     } else {
-        cout << "Command not recognized." << endl;
-        exit(1);
+        printHelp();
     }
 }
 
