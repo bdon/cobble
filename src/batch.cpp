@@ -129,19 +129,15 @@ void cmdBatch(int argc, char * argv[]) {
 
     while (iter.next()) {
         int data_z = iter.z;
+        if (data_z > maxzoom - 2) continue;
         int data_x = iter.x;
         int data_y = iter.y;
-
-        if (data_z > maxzoom - 2) continue;
-
-        int meta_z = data_z;
-        int meta_x = data_x;
-        int meta_y = data_y;
         string data = iter.data;
 
-        asio::post(pool, [&writeTile,&resolutions,&output,&map_dir,data_z,data_x,data_y,data,meta_z,meta_x,meta_y,&created_dirs,&created_dirs_mutex] {
+        asio::post(pool, [&writeTile,&resolutions,&output,&map_dir,data_z,data_x,data_y,data,&created_dirs,&created_dirs_mutex,maxzoom] {
             for (size_t res : resolutions) { // 1, 2 or 3
-                auto img = cbbl::render(map_dir,meta_z,meta_x,meta_y,res,data,data_z,data_x,data_y,2);
+                // metatile = datatile
+                auto img = cbbl::render(map_dir,data_z,data_x,data_y,res,data,data_z,data_x,data_y,2);
                 for (int i = 0; i < 4; i++) {
                     for (int j = 0; j < 4; j++) {
                         mapnik::image_view_rgba8 cropped{256*res*i,256*res*j,256*res,256*res,img};
@@ -172,9 +168,31 @@ void cmdBatch(int argc, char * argv[]) {
                         writeTile(res,0,0,0,buf);
                     }
                 }
-            }
 
-            // TODO special case data tile 14 to output 17-maxzoom
+                // TODO special case data tile 14: it outputs 17 to maxzoom
+                if (data_z == 14) {
+                    for (int meta_z = 15; meta_z <= maxzoom - 2; meta_z++) {
+                        int diff = meta_z - 14;
+                        for (int u = 0; u < 1 << diff; u++) {
+                            for (int v = 0; v < 1 << diff; v++) {
+                                int meta_x = data_x * (1 << diff) + u;
+                                int meta_y = data_y * (1 << diff) + v;
+                                auto img = cbbl::render(map_dir,meta_z,meta_x,meta_y,res,data,14,data_x,data_y,2);
+                                for (int i = 0; i < 4; i++) {
+                                    for (int j = 0; j < 4; j++) {
+                                        mapnik::image_view_rgba8 cropped{256*res*i,256*res*j,256*res,256*res,img};
+                                        auto buf = mapnik::save_to_string(cropped,"png");
+                                        int display_z = meta_z + 2;
+                                        int display_x = meta_x * 4 + i;
+                                        int display_y = meta_y * 4 + j;
+                                        writeTile(res,display_z,display_x,display_y,buf);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         });
     }
 
