@@ -100,16 +100,46 @@ void cmdBatch(int argc, char * argv[]) {
 
     set<string> created_dirs;
     mutex created_dirs_mutex;
+
+    auto writeTile = [&output, &created_dirs, &created_dirs_mutex](int res, int z, int x, int y, const string& buf) {
+        string z_dir = output + "/" + to_string(z);
+        string zx_dir = output + "/" + to_string(z) + "/" + to_string(x);
+        {
+            lock_guard<mutex> lock(created_dirs_mutex);
+            if (!created_dirs.count(z_dir)) {
+                boost::filesystem::create_directory(z_dir);
+                created_dirs.insert(z_dir);
+            }
+            if (!created_dirs.count(zx_dir)) {
+                boost::filesystem::create_directory(zx_dir);
+                created_dirs.insert(zx_dir);
+            }
+        }
+        ofstream outfile;
+        stringstream tile_name;
+        tile_name << output + "/" + to_string(z) + "/" + to_string(x) + "/" + to_string(y);
+        if (res > 1) {
+            tile_name << "@" << res << "x";
+        }
+        tile_name << ".png";
+        outfile.open(tile_name.str());
+        outfile << buf << endl;
+        outfile.close();
+    };
+
     while (iter.next()) {
         int data_z = iter.z;
         int data_x = iter.x;
         int data_y = iter.y;
+
+        if (data_z > maxzoom - 2) continue;
+
         int meta_z = data_z;
         int meta_x = data_x;
         int meta_y = data_y;
         string data = iter.data;
 
-        asio::post(pool, [&resolutions,&output,&map_dir,data_z,data_x,data_y,data,meta_z,meta_x,meta_y,&created_dirs,&created_dirs_mutex] {
+        asio::post(pool, [&writeTile,&resolutions,&output,&map_dir,data_z,data_x,data_y,data,meta_z,meta_x,meta_y,&created_dirs,&created_dirs_mutex] {
             for (size_t res : resolutions) { // 1, 2 or 3
                 auto img = cbbl::render(map_dir,meta_z,meta_x,meta_y,res,data,data_z,data_x,data_y,2);
                 for (int i = 0; i < 4; i++) {
@@ -119,34 +149,31 @@ void cmdBatch(int argc, char * argv[]) {
                         int display_z = data_z + 2;
                         int display_x = data_x * 4 + i;
                         int display_y = data_y * 4 + j;
-                        string z_dir = output + "/" + to_string(display_z);
-                        string zx_dir = output + "/" + to_string(display_z) + "/" + to_string(display_x);
-                        {
-                            lock_guard<mutex> lock(created_dirs_mutex);
-                            if (!created_dirs.count(z_dir)) {
-                                boost::filesystem::create_directory(z_dir);
-                                created_dirs.insert(z_dir);
-                            } 
-                            if (!created_dirs.count(zx_dir)) {
-                                boost::filesystem::create_directory(zx_dir);
-                                created_dirs.insert(zx_dir);
+                        writeTile(res,display_z,display_x,display_y,buf);
+                    }
+                }
+
+                // special case data tile 0,0,0 to output display levels 0 and 1
+                if (data_z == 0) {
+                    {
+                        auto img = cbbl::render(map_dir,0,0,0,res,data,0,0,0,1);
+                        for (int i = 0; i < 2; i++) {
+                            for (int j = 0; j < 2; j++) {
+                                mapnik::image_view_rgba8 cropped{256*res*i,256*res*j,256*res,256*res,img};
+                                auto buf = mapnik::save_to_string(cropped,"png");
+                                writeTile(res,1,i,j,buf);
                             }
                         }
-                        ofstream outfile;
-                        stringstream tile_name;
-                        tile_name << output + "/" + to_string(display_z) + "/" + to_string(display_x) + "/" + to_string(display_y);
-                        if (res > 1) {
-                            tile_name << "@" << res << "x";
-                        }
-                        tile_name << ".png";
-                        outfile.open(tile_name.str());
-                        outfile << buf << endl;
-                        outfile.close();
+                    }
+
+                    {
+                        auto img = cbbl::render(map_dir,0,0,0,res,data,0,0,0,0);
+                        auto buf = mapnik::save_to_string(img,"png");
+                        writeTile(res,0,0,0,buf);
                     }
                 }
             }
 
-            // TODO special case data tile 0,0,0 to output display levels 0 and 1
             // TODO special case data tile 14 to output 17-maxzoom
         });
     }
