@@ -48,7 +48,7 @@ const tuple<string,string,string> MbtilesSource::center() {
         getline(s_stream, zoom, ',');
         return {x,y,zoom};
     } else {
-        cout << "Malformed mbtiles" << endl;
+        cout << "mbtiles missing center." << endl;
     }
     return {"0","0","0"};
 }
@@ -69,7 +69,7 @@ const tuple<string,string,string,string> MbtilesSource::bounds() {
         getline(s_stream, max_y, ',');
         return {min_x,min_y,max_x,max_y};
     } else {
-        cout << "Malformed mbtiles" << endl;
+        cout << "mbtiles missing bounds." << endl;
     }
     return {"-180","-90","180","90"};
 }
