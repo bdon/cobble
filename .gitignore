@@ -3,3 +3,5 @@ CMakeFiles
 Makefile
 /cbbl
 cmake_install.cmake
+venv
+*.mbtiles
