@@ -81,12 +81,13 @@ void cmdBatch(int argc, char * argv[]) {
         boost::filesystem::remove_all(output);
     }
 
-    string map_dir = "debug";
+    string map_dir = "example";
     if (result.count("map")) map_dir = result["map"].as<string>();
-    if (map_dir == "debug") {
-        mapnik::freetype_engine::register_fonts("/usr/local/lib/mapnik/fonts");
-    } else {
+
+    if (boost::filesystem::exists(map_dir + "/fonts")) {
         mapnik::freetype_engine::register_fonts(map_dir + "/fonts");
+    } else {
+        mapnik::freetype_engine::register_fonts("/usr/local/lib/mapnik/fonts");
     }
 
     auto iter = cbbl::MbtilesSource::Iterator(source);

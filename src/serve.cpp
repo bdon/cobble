@@ -3,6 +3,7 @@
 #define USE_STANDALONE_ASIO true
 #include "server_http.hpp"
 #include "asio/thread_pool.hpp"
+#include "boost/filesystem.hpp"
 #include "mapnik/image_view.hpp"
 #include "mapnik/font_engine_freetype.hpp"
 
@@ -79,13 +80,13 @@ void cmdServe(int argc, char * argv[]) {
     auto bounds = source->bounds();
     auto center = source->center();
 
-    string map_dir = "debug";
+    string map_dir = "example";
     if (result.count("map")) map_dir = result["map"].as<string>();
 
-    if (map_dir == "debug") {
-        mapnik::freetype_engine::register_fonts("/usr/local/lib/mapnik/fonts");
-    } else {
+    if (boost::filesystem::exists(map_dir + "/fonts")) {
         mapnik::freetype_engine::register_fonts(map_dir + "/fonts");
+    } else {
+        mapnik::freetype_engine::register_fonts("/usr/local/lib/mapnik/fonts");
     }
 
     cout << "source: " << source_str << " with " << threads << " threads on port " << port << endl;
