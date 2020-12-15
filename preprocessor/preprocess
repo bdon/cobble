@@ -26,7 +26,9 @@ def pow_f(zoom,base,base_val):
 
 def write(infile,outfile):
 	env = Environment(
-	    loader=FileSystemLoader('.')
+	    loader=FileSystemLoader('.'),
+	    trim_blocks = True,
+	    lstrip_blocks = True
 	)
 	try:	
 		result = env.get_template(infile).render(zooms=zooms,pow=pow_f)
