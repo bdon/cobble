@@ -1,0 +1,44 @@
+<Map background-color="#f1f2f2">
+    <Style name="water_fill">
+	    <Rule>
+	        <PolygonSymbolizer fill="blue" />
+	    </Rule>
+	</Style>
+	<Style name="roads_casing">
+		{% for z in zooms(12,21) %}
+			{% for roadclass in ['minor_road','major_road'] %}
+		<Rule>
+			{{ z.scale }}
+            <Filter>[pmap:kind] = '{{ roadclass }}'</Filter>
+			<LineSymbolizer stroke="#888888" stroke-width="{{ pow(z,14,1.1) }}" stroke-linecap="round" />
+		</Rule>
+			{% endfor %}
+		{% endfor %}
+	</Style>
+    <Style name="roads_stroke">
+        {% for z in zooms(12,21) %}
+        	{% for roadclass in ['minor_road','major_road'] %}
+        <Rule>
+            {{ z.scale }}
+            <Filter>[pmap:kind] = '{{ roadclass }}'</Filter>
+            <LineSymbolizer stroke="white" stroke-width="{{ pow(z,14,1) }}" stroke-linecap="round" />
+        </Rule>
+		    {% endfor %}
+        {% endfor %}
+    </Style>
+    <Style name="roads_label">
+	    <Rule>
+	        <TextSymbolizer
+	            face-name="DejaVu Sans Book" size="10" fill="#555555" 
+	            halo-fill="white" halo-radius="1"
+	            placement="line" allow-overlap="false" avoid-edges="true">
+	            [name]
+	        </TextSymbolizer>
+	    </Rule>
+    </Style>
+    <Style name="mask_fill">
+	    <Rule>
+	        <PolygonSymbolizer fill="#dddddd" />
+	    </Rule>
+	</Style>
+</Map>

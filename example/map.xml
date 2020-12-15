@@ -1,0 +1,226 @@
+<Map background-color="#f1f2f2">
+    <Style name="water_fill">
+	    <Rule>
+	        <PolygonSymbolizer fill="blue" />
+	    </Rule>
+	</Style>
+	<Style name="roads_casing">
+		<Rule>
+			<MaxScaleDenominator>160000</MaxScaleDenominator><MinScaleDenominator>80000</MinScaleDenominator>
+            <Filter>[pmap:kind] = 'minor_road'</Filter>
+			<LineSymbolizer stroke="#888888" stroke-width="0" stroke-linecap="round" />
+		</Rule>
+		<Rule>
+			<MaxScaleDenominator>160000</MaxScaleDenominator><MinScaleDenominator>80000</MinScaleDenominator>
+            <Filter>[pmap:kind] = 'major_road'</Filter>
+			<LineSymbolizer stroke="#888888" stroke-width="0" stroke-linecap="round" />
+		</Rule>
+		<Rule>
+			<MaxScaleDenominator>80000</MaxScaleDenominator><MinScaleDenominator>40000</MinScaleDenominator>
+            <Filter>[pmap:kind] = 'minor_road'</Filter>
+			<LineSymbolizer stroke="#888888" stroke-width="0" stroke-linecap="round" />
+		</Rule>
+		<Rule>
+			<MaxScaleDenominator>80000</MaxScaleDenominator><MinScaleDenominator>40000</MinScaleDenominator>
+            <Filter>[pmap:kind] = 'major_road'</Filter>
+			<LineSymbolizer stroke="#888888" stroke-width="0" stroke-linecap="round" />
+		</Rule>
+		<Rule>
+			<MaxScaleDenominator>40000</MaxScaleDenominator><MinScaleDenominator>20000</MinScaleDenominator>
+            <Filter>[pmap:kind] = 'minor_road'</Filter>
+			<LineSymbolizer stroke="#888888" stroke-width="1.1" stroke-linecap="round" />
+		</Rule>
+		<Rule>
+			<MaxScaleDenominator>40000</MaxScaleDenominator><MinScaleDenominator>20000</MinScaleDenominator>
+            <Filter>[pmap:kind] = 'major_road'</Filter>
+			<LineSymbolizer stroke="#888888" stroke-width="1.1" stroke-linecap="round" />
+		</Rule>
+		<Rule>
+			<MaxScaleDenominator>20000</MaxScaleDenominator><MinScaleDenominator>10000</MinScaleDenominator>
+            <Filter>[pmap:kind] = 'minor_road'</Filter>
+			<LineSymbolizer stroke="#888888" stroke-width="2.2" stroke-linecap="round" />
+		</Rule>
+		<Rule>
+			<MaxScaleDenominator>20000</MaxScaleDenominator><MinScaleDenominator>10000</MinScaleDenominator>
+            <Filter>[pmap:kind] = 'major_road'</Filter>
+			<LineSymbolizer stroke="#888888" stroke-width="2.2" stroke-linecap="round" />
+		</Rule>
+		<Rule>
+			<MaxScaleDenominator>10000</MaxScaleDenominator><MinScaleDenominator>5000</MinScaleDenominator>
+            <Filter>[pmap:kind] = 'minor_road'</Filter>
+			<LineSymbolizer stroke="#888888" stroke-width="4.4" stroke-linecap="round" />
+		</Rule>
+		<Rule>
+			<MaxScaleDenominator>10000</MaxScaleDenominator><MinScaleDenominator>5000</MinScaleDenominator>
+            <Filter>[pmap:kind] = 'major_road'</Filter>
+			<LineSymbolizer stroke="#888888" stroke-width="4.4" stroke-linecap="round" />
+		</Rule>
+		<Rule>
+			<MaxScaleDenominator>5000</MaxScaleDenominator><MinScaleDenominator>2500</MinScaleDenominator>
+            <Filter>[pmap:kind] = 'minor_road'</Filter>
+			<LineSymbolizer stroke="#888888" stroke-width="8.8" stroke-linecap="round" />
+		</Rule>
+		<Rule>
+			<MaxScaleDenominator>5000</MaxScaleDenominator><MinScaleDenominator>2500</MinScaleDenominator>
+            <Filter>[pmap:kind] = 'major_road'</Filter>
+			<LineSymbolizer stroke="#888888" stroke-width="8.8" stroke-linecap="round" />
+		</Rule>
+		<Rule>
+			<MaxScaleDenominator>2500</MaxScaleDenominator><MinScaleDenominator>1250</MinScaleDenominator>
+            <Filter>[pmap:kind] = 'minor_road'</Filter>
+			<LineSymbolizer stroke="#888888" stroke-width="17.6" stroke-linecap="round" />
+		</Rule>
+		<Rule>
+			<MaxScaleDenominator>2500</MaxScaleDenominator><MinScaleDenominator>1250</MinScaleDenominator>
+            <Filter>[pmap:kind] = 'major_road'</Filter>
+			<LineSymbolizer stroke="#888888" stroke-width="17.6" stroke-linecap="round" />
+		</Rule>
+		<Rule>
+			<MaxScaleDenominator>1250</MaxScaleDenominator><MinScaleDenominator>625</MinScaleDenominator>
+            <Filter>[pmap:kind] = 'minor_road'</Filter>
+			<LineSymbolizer stroke="#888888" stroke-width="35.2" stroke-linecap="round" />
+		</Rule>
+		<Rule>
+			<MaxScaleDenominator>1250</MaxScaleDenominator><MinScaleDenominator>625</MinScaleDenominator>
+            <Filter>[pmap:kind] = 'major_road'</Filter>
+			<LineSymbolizer stroke="#888888" stroke-width="35.2" stroke-linecap="round" />
+		</Rule>
+		<Rule>
+			<MaxScaleDenominator>625</MaxScaleDenominator><MinScaleDenominator>312</MinScaleDenominator>
+            <Filter>[pmap:kind] = 'minor_road'</Filter>
+			<LineSymbolizer stroke="#888888" stroke-width="70.4" stroke-linecap="round" />
+		</Rule>
+		<Rule>
+			<MaxScaleDenominator>625</MaxScaleDenominator><MinScaleDenominator>312</MinScaleDenominator>
+            <Filter>[pmap:kind] = 'major_road'</Filter>
+			<LineSymbolizer stroke="#888888" stroke-width="70.4" stroke-linecap="round" />
+		</Rule>
+		<Rule>
+			<MaxScaleDenominator>312</MaxScaleDenominator><MinScaleDenominator>156</MinScaleDenominator>
+            <Filter>[pmap:kind] = 'minor_road'</Filter>
+			<LineSymbolizer stroke="#888888" stroke-width="140.8" stroke-linecap="round" />
+		</Rule>
+		<Rule>
+			<MaxScaleDenominator>312</MaxScaleDenominator><MinScaleDenominator>156</MinScaleDenominator>
+            <Filter>[pmap:kind] = 'major_road'</Filter>
+			<LineSymbolizer stroke="#888888" stroke-width="140.8" stroke-linecap="round" />
+		</Rule>
+	</Style>
+    <Style name="roads_stroke">
+        <Rule>
+            <MaxScaleDenominator>160000</MaxScaleDenominator><MinScaleDenominator>80000</MinScaleDenominator>
+            <Filter>[pmap:kind] = 'minor_road'</Filter>
+            <LineSymbolizer stroke="white" stroke-width="0" stroke-linecap="round" />
+        </Rule>
+        <Rule>
+            <MaxScaleDenominator>160000</MaxScaleDenominator><MinScaleDenominator>80000</MinScaleDenominator>
+            <Filter>[pmap:kind] = 'major_road'</Filter>
+            <LineSymbolizer stroke="white" stroke-width="0" stroke-linecap="round" />
+        </Rule>
+        <Rule>
+            <MaxScaleDenominator>80000</MaxScaleDenominator><MinScaleDenominator>40000</MinScaleDenominator>
+            <Filter>[pmap:kind] = 'minor_road'</Filter>
+            <LineSymbolizer stroke="white" stroke-width="0" stroke-linecap="round" />
+        </Rule>
+        <Rule>
+            <MaxScaleDenominator>80000</MaxScaleDenominator><MinScaleDenominator>40000</MinScaleDenominator>
+            <Filter>[pmap:kind] = 'major_road'</Filter>
+            <LineSymbolizer stroke="white" stroke-width="0" stroke-linecap="round" />
+        </Rule>
+        <Rule>
+            <MaxScaleDenominator>40000</MaxScaleDenominator><MinScaleDenominator>20000</MinScaleDenominator>
+            <Filter>[pmap:kind] = 'minor_road'</Filter>
+            <LineSymbolizer stroke="white" stroke-width="1" stroke-linecap="round" />
+        </Rule>
+        <Rule>
+            <MaxScaleDenominator>40000</MaxScaleDenominator><MinScaleDenominator>20000</MinScaleDenominator>
+            <Filter>[pmap:kind] = 'major_road'</Filter>
+            <LineSymbolizer stroke="white" stroke-width="1" stroke-linecap="round" />
+        </Rule>
+        <Rule>
+            <MaxScaleDenominator>20000</MaxScaleDenominator><MinScaleDenominator>10000</MinScaleDenominator>
+            <Filter>[pmap:kind] = 'minor_road'</Filter>
+            <LineSymbolizer stroke="white" stroke-width="2" stroke-linecap="round" />
+        </Rule>
+        <Rule>
+            <MaxScaleDenominator>20000</MaxScaleDenominator><MinScaleDenominator>10000</MinScaleDenominator>
+            <Filter>[pmap:kind] = 'major_road'</Filter>
+            <LineSymbolizer stroke="white" stroke-width="2" stroke-linecap="round" />
+        </Rule>
+        <Rule>
+            <MaxScaleDenominator>10000</MaxScaleDenominator><MinScaleDenominator>5000</MinScaleDenominator>
+            <Filter>[pmap:kind] = 'minor_road'</Filter>
+            <LineSymbolizer stroke="white" stroke-width="4" stroke-linecap="round" />
+        </Rule>
+        <Rule>
+            <MaxScaleDenominator>10000</MaxScaleDenominator><MinScaleDenominator>5000</MinScaleDenominator>
+            <Filter>[pmap:kind] = 'major_road'</Filter>
+            <LineSymbolizer stroke="white" stroke-width="4" stroke-linecap="round" />
+        </Rule>
+        <Rule>
+            <MaxScaleDenominator>5000</MaxScaleDenominator><MinScaleDenominator>2500</MinScaleDenominator>
+            <Filter>[pmap:kind] = 'minor_road'</Filter>
+            <LineSymbolizer stroke="white" stroke-width="8" stroke-linecap="round" />
+        </Rule>
+        <Rule>
+            <MaxScaleDenominator>5000</MaxScaleDenominator><MinScaleDenominator>2500</MinScaleDenominator>
+            <Filter>[pmap:kind] = 'major_road'</Filter>
+            <LineSymbolizer stroke="white" stroke-width="8" stroke-linecap="round" />
+        </Rule>
+        <Rule>
+            <MaxScaleDenominator>2500</MaxScaleDenominator><MinScaleDenominator>1250</MinScaleDenominator>
+            <Filter>[pmap:kind] = 'minor_road'</Filter>
+            <LineSymbolizer stroke="white" stroke-width="16" stroke-linecap="round" />
+        </Rule>
+        <Rule>
+            <MaxScaleDenominator>2500</MaxScaleDenominator><MinScaleDenominator>1250</MinScaleDenominator>
+            <Filter>[pmap:kind] = 'major_road'</Filter>
+            <LineSymbolizer stroke="white" stroke-width="16" stroke-linecap="round" />
+        </Rule>
+        <Rule>
+            <MaxScaleDenominator>1250</MaxScaleDenominator><MinScaleDenominator>625</MinScaleDenominator>
+            <Filter>[pmap:kind] = 'minor_road'</Filter>
+            <LineSymbolizer stroke="white" stroke-width="32" stroke-linecap="round" />
+        </Rule>
+        <Rule>
+            <MaxScaleDenominator>1250</MaxScaleDenominator><MinScaleDenominator>625</MinScaleDenominator>
+            <Filter>[pmap:kind] = 'major_road'</Filter>
+            <LineSymbolizer stroke="white" stroke-width="32" stroke-linecap="round" />
+        </Rule>
+        <Rule>
+            <MaxScaleDenominator>625</MaxScaleDenominator><MinScaleDenominator>312</MinScaleDenominator>
+            <Filter>[pmap:kind] = 'minor_road'</Filter>
+            <LineSymbolizer stroke="white" stroke-width="64" stroke-linecap="round" />
+        </Rule>
+        <Rule>
+            <MaxScaleDenominator>625</MaxScaleDenominator><MinScaleDenominator>312</MinScaleDenominator>
+            <Filter>[pmap:kind] = 'major_road'</Filter>
+            <LineSymbolizer stroke="white" stroke-width="64" stroke-linecap="round" />
+        </Rule>
+        <Rule>
+            <MaxScaleDenominator>312</MaxScaleDenominator><MinScaleDenominator>156</MinScaleDenominator>
+            <Filter>[pmap:kind] = 'minor_road'</Filter>
+            <LineSymbolizer stroke="white" stroke-width="128" stroke-linecap="round" />
+        </Rule>
+        <Rule>
+            <MaxScaleDenominator>312</MaxScaleDenominator><MinScaleDenominator>156</MinScaleDenominator>
+            <Filter>[pmap:kind] = 'major_road'</Filter>
+            <LineSymbolizer stroke="white" stroke-width="128" stroke-linecap="round" />
+        </Rule>
+    </Style>
+    <Style name="roads_label">
+	    <Rule>
+	        <TextSymbolizer
+	            face-name="DejaVu Sans Book" size="10" fill="#555555" 
+	            halo-fill="white" halo-radius="1"
+	            placement="line" allow-overlap="false" avoid-edges="true">
+	            [name]
+	        </TextSymbolizer>
+	    </Rule>
+    </Style>
+    <Style name="mask_fill">
+	    <Rule>
+	        <PolygonSymbolizer fill="#dddddd" />
+	    </Rule>
+	</Style>
+</Map>
