@@ -6,8 +6,6 @@ from jinja2 import Environment, FileSystemLoader
 from watchdog.events import FileSystemEventHandler, LoggingEventHandler
 from watchdog.observers import Observer
 
-
-
 class Zoom:
 	def __init__(self,z):
 		self.z = z
@@ -21,14 +19,21 @@ class Zoom:
 def zooms(min_zoom,max_zoom):
 	return [Zoom(z) for z in range(min_zoom,max_zoom+1)]
 
+def pow_f(zoom,base,base_val):
+	if zoom.z < base:
+		return 0
+	return base_val * pow(2,(zoom.z - base))
+
 def write(infile,outfile):
 	env = Environment(
 	    loader=FileSystemLoader('.')
 	)
-	template = env.get_template(infile)
-	print("writing " + outfile)
-	with open(outfile,'w') as f:
-		f.write(template.render(zooms=zooms))
+	try:	
+		result = env.get_template(infile).render(zooms=zooms,pow=pow_f)
+		with open(outfile,'w') as f:
+			f.write(result)
+	except Exception as e:
+		print(e)
 
 if __name__ == "__main__":
 
