@@ -1,44 +1,141 @@
-<Map background-color="#f1f2f2">
-    <Style name="water_fill">
-	    <Rule>
-	        <PolygonSymbolizer fill="blue" />
-	    </Rule>
-	</Style>
-	<Style name="roads_casing">
-		{% for z in zooms(12,21) %}
-			{% for roadclass in ['minor_road','major_road'] %}
-		<Rule>
-			{{ z.scale }}
-            <Filter>[pmap:kind] = '{{ roadclass }}'</Filter>
-			<LineSymbolizer stroke="#888888" stroke-width="{{ pow(z,14,1.1) }}" stroke-linecap="round" />
-		</Rule>
-			{% endfor %}
-		{% endfor %}
-	</Style>
-    <Style name="roads_stroke">
-        {% for z in zooms(12,21) %}
-        	{% for roadclass in ['minor_road','major_road'] %}
+<Map background-color="#dddddd">
+    {# simple symbolizers #}
+    <Style name="earth">
         <Rule>
-            {{ z.scale }}
-            <Filter>[pmap:kind] = '{{ roadclass }}'</Filter>
-            <LineSymbolizer stroke="white" stroke-width="{{ pow(z,14,1) }}" stroke-linecap="round" />
+            <PolygonSymbolizer fill="#e7f1ee" />
         </Rule>
-		    {% endfor %}
-        {% endfor %}
     </Style>
-    <Style name="roads_label">
-	    <Rule>
-	        <TextSymbolizer
-	            face-name="DejaVu Sans Book" size="10" fill="#555555" 
-	            halo-fill="white" halo-radius="1"
-	            placement="line" allow-overlap="false" avoid-edges="true">
-	            [name]
-	        </TextSymbolizer>
-	    </Rule>
+    <Style name="water_fill">
+        <Rule>
+            <PolygonSymbolizer fill="#a4cae1" />
+        </Rule>
     </Style>
     <Style name="mask_fill">
-	    <Rule>
-	        <PolygonSymbolizer fill="#dddddd" />
-	    </Rule>
-	</Style>
+        <Rule>
+            <PolygonSymbolizer fill="#dddddd" />
+        </Rule>
+    </Style>
+    {# landuse fills #} 
+    {% for v in [
+        ('landuse_park',"[pmap:kind] = 'park' or [pmap:kind] = 'cemetery'",'#c2f7d1'),
+        ('landuse_hospital',"[pmap:kind] = 'hospital'",'#ffeae8'),
+        ('landuse_industrial',"[pmap:kind] = 'industrial'",'#f8ffed'),
+        ('landuse_school',"[pmap:kind] = 'school'",'#f2fef9'),
+        ('natural_wood',"[natural] = 'wood' or [leisure] = 'nature_reserve' or [landuse] = 'forest'","#eafbe9"),
+        ('natural_scrub',"[natural] = 'scrub' or [natural] = 'grassland'","#dbefd1"),
+        ('natural_glacier',"[natural] = 'glacier'","#ffffff"),
+        ('natural_sand',"[natural] = 'sand'","#eff5e7")
+    ] %}
+    <Style name="{{ v[0] }}">
+        <Rule>
+            <Filter>{{ v[1] }}</Filter>
+            <PolygonSymbolizer fill="{{ v[2] }}" />
+        </Rule>
+    </Style>
+    {% endfor %}
+    {# for tunnel, surface, bridge: [other, minor_road, medium_road, major_road, highway], [stroke_color, casing_color] #}
+    {% set strokes = [
+        [["white","#888888"],["white","#888888"],["white","#888888"],["white","#888888"],["white","#888888"]],
+        [["white","#888888"],["white","#888888"],["white","#888888"],["#fdfef0","#888888"],["#fdf6d4","#888888"]],
+        [["white","#888888"],["white","#888888"],["white","#888888"],["#fdfef0","#333333"],["#fdf6d4","#333333"]]
+    ] %}
+    {# for other, minor_road, medium_road, major_road, highway: [stroke_width,casing_width] #}
+    {% set stroke_widths = [
+        [interpolate_exp(2,(12,1)),interpolate_exp(2,(12,1))],
+        [interpolate_exp(1.6,(15,1),(17,6)),interpolate_exp(1.6,(15,1.5),(17,7))],
+        [interpolate_exp(1.6,(14,1),(16,6)),interpolate_exp(1.6,(14,1.5),(16,7))],
+        [interpolate_exp(1.6,(13,1),(15,6)),interpolate_exp(1.6,(13,1.5),(15,7))],
+        [interpolate_exp(1.6,(12,1),(14,6)),interpolate_exp(1.6,(12,1.5),(14,7))]
+    ] %}
+    {% for i, level in enumerate([
+        ('tunnels_','&lt;'),
+        ('','='),
+        ('bridges_','>')
+    ]) %}
+    {% for j, class in enumerate([('other',16),('minor_road',14),('medium_road',12),('major_road',11),('highway',6)]) %}
+    {% for k, casing in enumerate(['','_casing']) %} 
+    <Style name="roads_{{ level[0] }}{{ class[0] }}{{ casing }}">
+        {% for z in zooms(class[1],18) %} 
+        <Rule>
+            {{ z.elem }}
+            <Filter>[pmap:level] {{ level[1] }} 0 and [pmap:kind] = '{{ class[0] }}'</Filter>
+            <LineSymbolizer stroke="{{ strokes[i][j][k] }}" stroke-width="{{ stroke_widths[j][k](z) }}" />
+        </Rule>
+        {% endfor %}
+    </Style>
+    {% endfor %}
+    {% endfor %}
+    {% endfor %}
+    {# road labels #}
+    <Style name="roads_label">
+        <Rule>
+            <Filter>[pmap:kind] != 'highway'</Filter>
+            <TextSymbolizer
+                face-name="Noto Serif CJK TC Regular" size="14" fill="#333333" 
+                halo-fill="white" halo-radius="2"
+                placement="line" allow-overlap="false" avoid-edges="true" justify-alignment="left" repeat-distance="4.0">
+                [name]
+            </TextSymbolizer>
+        </Rule>
+        <Rule>
+            <Filter>[pmap:kind] = 'highway'</Filter>
+            <TextSymbolizer
+                face-name="Noto Serif CJK TC Bold" size="14" fill="#888888" 
+                halo-fill="white" halo-radius="2" repeat-distance="12.0"
+                placement="line" allow-overlap="false" avoid-edges="true">
+                [name]
+            </TextSymbolizer>
+        </Rule>
+    </Style>
+    <Style name="villages_label">
+        <Rule>
+            <Filter>[place] = 'village'</Filter>
+            <TextSymbolizer
+                face-name="Noto Serif CJK TC Bold" size="15" fill="#666666" 
+                halo-fill="white" halo-radius="1" margin="4"
+                placement="point" allow-overlap="false" avoid-edges="true" justify-alignment="left">
+                [name] + "\n"<Format size="14">[name:ja_rm]</Format>
+            </TextSymbolizer>
+        </Rule>
+    </Style>
+    <Style name="city_label" opacity="0.3">
+        <Rule>
+            <Filter>[place] = 'city'</Filter>
+            <TextSymbolizer
+                face-name="Noto Serif CJK TC Black" size="36" fill="black"
+                halo-fill="white" halo-radius="1" margin="4"
+                placement="point" allow-overlap="false" avoid-edges="true" justify-alignment="left">
+                [name] + "\n"<Format size="14">[name:ja_rm]</Format>
+            </TextSymbolizer>
+        </Rule>
+    </Style>
+    <Style name="places_label" opacity="0.4">
+        <Rule>
+            <Filter>[place] = 'suburb'</Filter>
+            <TextSymbolizer
+                face-name="Noto Serif CJK TC Black" size="20" fill="black" 
+                halo-fill="white" halo-radius="1" margin="4"
+                placement="point" allow-overlap="false" avoid-edges="true" justify-alignment="left">
+                [name] + "\n"<Format size="14">[name:ja_rm]</Format>
+            </TextSymbolizer>
+        </Rule>
+    </Style>
+    <Style name="landuse_label" opacity="1.0">
+        <Rule>
+            <Filter>[pmap:kind] = 'park'</Filter>
+            <TextSymbolizer
+                face-name="Noto Serif CJK TC Bold" size="14" fill="#639f64" 
+                halo-fill="#c2f7d1" halo-radius="1" margin="4"
+                placement="point" allow-overlap="false" avoid-edges="true" justify-alignment="left" wrap-width="60" line-spacing="-6">
+                [name] + "\n"<Format size="14">[name:ja_rm]</Format>
+            </TextSymbolizer>
+        </Rule>
+    </Style>
+    <Style name="buildings_fill">
+        <Rule>
+            {{ min_zoom_elem(14) }}
+            <PolygonSymbolizer fill="#cccccc" />
+            }
+        </Rule>
+    </Style>
 </Map>

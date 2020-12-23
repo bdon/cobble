@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-
 import argparse
 import time
 from jinja2 import Environment, FileSystemLoader
@@ -7,22 +6,40 @@ from watchdog.events import FileSystemEventHandler, LoggingEventHandler
 from watchdog.observers import Observer
 
 class Zoom:
-	def __init__(self,z):
+	def __init__(self,z, is_last):
 		self.z = z
+		self.is_last = is_last
 
 	@property
-	def scale(self):
+	def elem(self):
 		max_scale = 655360000 >> self.z
 		min_scale = 655360000 >> (self.z+1)
-		return f"<MaxScaleDenominator>{max_scale}</MaxScaleDenominator><MinScaleDenominator>{min_scale}</MinScaleDenominator>"
+		if self.is_last:
+			return f"<MaxScaleDenominator>{max_scale}</MaxScaleDenominator>"
+		else:
+			return f"<MaxScaleDenominator>{max_scale}</MaxScaleDenominator><MinScaleDenominator>{min_scale}</MinScaleDenominator>"
+
+def min_zoom_elem(min_zoom):
+	scale = 655360000 >> min_zoom
+	return f"<MaxScaleDenominator>{scale}</MaxScaleDenominator>"
 
 def zooms(min_zoom,max_zoom):
-	return [Zoom(z) for z in range(min_zoom,max_zoom+1)]
+	return [Zoom(z,z == max_zoom) for z in range(min_zoom,max_zoom+1)]
 
-def pow_f(zoom,base,base_val):
-	if zoom.z < base:
-		return 0
-	return base_val * pow(2,(zoom.z - base))
+def interpolate_exp(exponent,*stops):
+	def fn(zoom_obj):
+		z = zoom_obj.z
+		if z <= stops[0][0]:
+			return stops[0][1]
+		if z >= stops[-1][0]:
+			return stops[-1][1]
+		idx = 0
+		while z < stops[idx][0]:
+			idx = idx + 1
+		normalized_x = (z - stops[idx][0]) / (stops[idx+1][0] - stops[idx][0])
+		normalized_y = pow(normalized_x,exponent)
+		return stops[idx][1] + normalized_y * (stops[idx+1][1] - stops[idx][1])
+	return fn
 
 def write(infile,outfile):
 	env = Environment(
@@ -31,14 +48,18 @@ def write(infile,outfile):
 	    lstrip_blocks = True
 	)
 	try:	
-		result = env.get_template(infile).render(zooms=zooms,pow=pow_f)
+		result = env.get_template(infile).render(
+			enumerate=enumerate,
+			min_zoom_elem=min_zoom_elem,
+			zooms=zooms,
+			interpolate_exp=interpolate_exp
+		)
 		with open(outfile,'w') as f:
 			f.write(result)
 	except Exception as e:
 		print(e)
 
 if __name__ == "__main__":
-
 	parser = argparse.ArgumentParser(description='Watch a Mapnik XML template.')
 	parser.add_argument('input', type=str, help='Input jinja2 template')
 	parser.add_argument('output', type=str, help='Output Mapnik XML')
