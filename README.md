@@ -19,7 +19,7 @@ Linux: libcairo-dev libtiff-dev libharfbuzz-dev
 ## Build
 
 * Mapnik is expected to be an a sibling directory
-* Configure your mapnik build with `./configure FULL_LIB_PATH=False`
+* Configure your mapnik build with `./configure FULL_LIB_PATH=False INPUT_PLUGINS='geojson,raster,shape,topojson' ENABLE_LOG=True`
 
 ## Alternatives
 * [mod_tile](https://github.com/openstreetmap/mod_tile)
