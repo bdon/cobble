@@ -6,6 +6,7 @@
 #include "boost/filesystem.hpp"
 #include "mapnik/image_view.hpp"
 #include "mapnik/font_engine_freetype.hpp"
+#include "mapnik/debug.hpp"
 
 #include "cbbl/tile.hpp"
 #include "cbbl/source.hpp"
@@ -79,6 +80,8 @@ void cmdServe(int argc, char * argv[]) {
     auto source = cbbl::CreateSource(source_str);
     auto bounds = source->bounds();
     auto center = source->center();
+
+    mapnik::logger::instance().set_severity(mapnik::logger::none);
 
     string map_dir = "example";
     if (result.count("map")) map_dir = result["map"].as<string>();
