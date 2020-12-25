@@ -15,7 +15,8 @@ void cmdBatch(int argc, char * argv[]) {
     cmd_options.add_options()
         ("v,verbose", "Verbose output")
         ("cmd", "Command to run", cxxopts::value<string>())
-        ("source", "Source e.g. example.mbtiles", cxxopts::value<string>())
+        ("source", "Vector source e.g. example.mbtiles", cxxopts::value<string>())
+        ("terrain", "Terrain source e.g. localhost:8081, terrain.mbtiles", cxxopts::value<string>())
         ("destination", "Output dir or destination e.g. output, output.mbtiles", cxxopts::value<string>())
         ("overwrite", "Overwrite output", cxxopts::value<bool>())
         ("threads", "Number of rendering threads", cxxopts::value<int>())
@@ -45,12 +46,17 @@ void cmdBatch(int argc, char * argv[]) {
     for (auto r : resolutions) cout << " @" << r << "x";
     cout << endl;
 
-    auto source = cbbl::MbtilesSource(result["source"].as<string>());
+    auto v_source = cbbl::MbtilesSource(result["source"].as<string>());
+
+    unique_ptr<cbbl::Source> t_source;
+    if (result.count("terrain")) {
+        t_source = make_unique<cbbl::MbtilesSource>(result["terrain"].as<string>());
+    }
 
     int total_tiles = 0;
     int num_resolutions = resolutions.size();
 
-    for (auto p : source.zoom_count()) {
+    for (auto p : v_source.zoom_count()) {
         int zoom_level = get<0>(p);
         int count = get<1>(p);
         if (zoom_level == 0) {
@@ -90,7 +96,7 @@ void cmdBatch(int argc, char * argv[]) {
         mapnik::freetype_engine::register_fonts("/usr/local/lib/mapnik/fonts");
     }
 
-    auto iter = cbbl::MbtilesSource::Iterator(source);
+    auto iter = cbbl::MbtilesSource::Iterator(v_source);
     boost::filesystem::create_directory(output);
 
     int threads = 4;
@@ -133,12 +139,17 @@ void cmdBatch(int argc, char * argv[]) {
         if (data_z > maxzoom - 2) continue;
         int data_x = iter.x;
         int data_y = iter.y;
-        string data = iter.data;
+        string v_data = iter.data;
 
-        asio::post(pool, [&writeTile,&resolutions,&output,&map_dir,data_z,data_x,data_y,data,&created_dirs,&created_dirs_mutex,maxzoom] {
+        optional<string> t_data;
+        if (t_source) {
+            t_data = t_source->fetch(data_z,data_x,data_y);
+        }
+
+        asio::post(pool, [&writeTile,&resolutions,&output,&map_dir,data_z,data_x,data_y,v_data,t_data,&created_dirs,&created_dirs_mutex,maxzoom] {
             for (size_t res : resolutions) { // 1, 2 or 3
                 // metatile = datatile
-                auto img = cbbl::render(map_dir,data_z,data_x,data_y,res,data,data_z,data_x,data_y,2);
+                auto img = cbbl::render(map_dir,data_z,data_x,data_y,res,v_data,t_data,data_z,data_x,data_y,2);
                 for (int i = 0; i < 4; i++) {
                     for (int j = 0; j < 4; j++) {
                         mapnik::image_view_rgba8 cropped{256*res*i,256*res*j,256*res,256*res,img};
@@ -153,7 +164,7 @@ void cmdBatch(int argc, char * argv[]) {
                 // special case data tile 0,0,0 to output display levels 0 and 1
                 if (data_z == 0) {
                     {
-                        auto img = cbbl::render(map_dir,0,0,0,res,data,0,0,0,1);
+                        auto img = cbbl::render(map_dir,0,0,0,res,v_data,t_data,0,0,0,1);
                         for (int i = 0; i < 2; i++) {
                             for (int j = 0; j < 2; j++) {
                                 mapnik::image_view_rgba8 cropped{256*res*i,256*res*j,256*res,256*res,img};
@@ -164,7 +175,7 @@ void cmdBatch(int argc, char * argv[]) {
                     }
 
                     {
-                        auto img = cbbl::render(map_dir,0,0,0,res,data,0,0,0,0);
+                        auto img = cbbl::render(map_dir,0,0,0,res,v_data,t_data,0,0,0,0);
                         auto buf = mapnik::save_to_string(img,"png");
                         writeTile(res,0,0,0,buf);
                     }
@@ -178,7 +189,7 @@ void cmdBatch(int argc, char * argv[]) {
                             for (int v = 0; v < 1 << diff; v++) {
                                 int meta_x = data_x * (1 << diff) + u;
                                 int meta_y = data_y * (1 << diff) + v;
-                                auto img = cbbl::render(map_dir,meta_z,meta_x,meta_y,res,data,14,data_x,data_y,2);
+                                auto img = cbbl::render(map_dir,meta_z,meta_x,meta_y,res,v_data,t_data,14,data_x,data_y,2);
                                 for (int i = 0; i < 4; i++) {
                                     for (int j = 0; j < 4; j++) {
                                         mapnik::image_view_rgba8 cropped{256*res*i,256*res*j,256*res,256*res,img};
@@ -198,8 +209,8 @@ void cmdBatch(int argc, char * argv[]) {
     }
 
     pool.join();
-    auto bounds = source.bounds();
-    auto center = source.center();
+    auto bounds = v_source.bounds();
+    auto center = v_source.center();
     ofstream index;
     index.open(output + "/index.html");
     index << cbbl::viewer(center,bounds) << endl;

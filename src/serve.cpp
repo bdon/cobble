@@ -16,6 +16,7 @@ using namespace std;
 using HttpServer = SimpleWeb::Server<SimpleWeb::HTTP>;
 
 thread_local unique_ptr<cbbl::Source> tVectorSource;
+thread_local unique_ptr<cbbl::Source> tTerrainSource;
 
 class Tile {
 public:
@@ -56,6 +57,7 @@ void cmdServe(int argc, char * argv[]) {
         ("v,verbose", "Verbose output")
         ("cmd", "Command to run", cxxopts::value<string>())
         ("source", "Vector source e.g. localhost:8080, example.mbtiles", cxxopts::value<string>())
+        ("terrain", "Terrain source e.g. localhost:8081, terrain.mbtiles", cxxopts::value<string>())
         ("cors", "Allow all CORS origins")
         ("port", "HTTP port", cxxopts::value<int>())
         ("threads", "Number of rendering threads", cxxopts::value<int>())
@@ -76,10 +78,16 @@ void cmdServe(int argc, char * argv[]) {
 
     bool cors = result.count("cors");
     auto v_source_str = result["source"].as<string>();
-
     auto v_source = cbbl::CreateSource(v_source_str);
     auto bounds = v_source->bounds();
     auto center = v_source->center();
+
+    optional<string> t_source_str;
+    if (result.count("terrain")) {
+        t_source_str = optional<string>(result["terrain"].as<string>());
+        // basic sanity check
+        auto t_source = cbbl::CreateSource(t_source_str.value());
+    }
 
     mapnik::logger::instance().set_severity(mapnik::logger::none);
 
@@ -94,7 +102,7 @@ void cmdServe(int argc, char * argv[]) {
 
     cout << "vector source: " << v_source_str << " with " << threads << " threads on port " << port << endl;
 
-    server.resource["^/([0-9]+)/([0-9]+)/([0-9]+)(@([2-3])x)?.png$"]["GET"] = [cors,&pool,v_source_str,map_dir](shared_ptr<HttpServer::Response> response, shared_ptr<HttpServer::Request> request) {
+    server.resource["^/([0-9]+)/([0-9]+)/([0-9]+)(@([2-3])x)?.png$"]["GET"] = [cors,&pool,v_source_str,t_source_str,map_dir](shared_ptr<HttpServer::Response> response, shared_ptr<HttpServer::Request> request) {
         // displaytile, metatile and datatile
         // the URL params are the Display tiles
         int32_t display_z = stoi(request->path_match[1]);
@@ -123,8 +131,9 @@ void cmdServe(int argc, char * argv[]) {
                 vector<pair<Tile,shared_ptr<HttpServer::Response>>> v;
                 v.emplace_back(display_tile,response);
                 mState.emplace(meta_tile,move(v));
-                asio::post(pool, [meta_tile,v_source_str,map_dir,cors,metatile_zdiff] {
+                asio::post(pool, [meta_tile,v_source_str,t_source_str,map_dir,cors,metatile_zdiff] {
                     if (!tVectorSource) tVectorSource = cbbl::CreateSource(v_source_str);
+                    if (!tTerrainSource && t_source_str) tTerrainSource = cbbl::CreateSource(t_source_str.value());
                     chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
                     // calculate the datatile for this metatile
                     int data_z = meta_tile.z;
@@ -137,8 +146,12 @@ void cmdServe(int argc, char * argv[]) {
                     }
                     Tile data_tile{data_z,data_x,data_y,meta_tile.scale};
                     auto v_data = tVectorSource->fetch(data_z,data_x,data_y);
-                    if(v_data) {
-                        auto img = cbbl::render(map_dir,meta_tile.z,meta_tile.x,meta_tile.y,meta_tile.scale,v_data,data_tile.z,data_tile.x,data_tile.y,metatile_zdiff); // string might be inefficient
+
+                    optional<string> t_data;
+                    if (tTerrainSource) t_data = tTerrainSource->fetch(data_z,data_x,data_y);
+
+                    if(v_data || t_data) {
+                        auto img = cbbl::render(map_dir,meta_tile.z,meta_tile.x,meta_tile.y,meta_tile.scale,v_data,t_data,data_tile.z,data_tile.x,data_tile.y,metatile_zdiff); // string might be inefficient
 
                         chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
                         cout << meta_tile.z << "/" << meta_tile.x << "/" << meta_tile.y <<  "@" << meta_tile.scale << ":" << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() << " ms" << endl;

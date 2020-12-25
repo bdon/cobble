@@ -38,6 +38,7 @@ roads roads_bridges_major_road_casing
 roads roads_bridges_major_road
 roads roads_bridges_highway_casing
 roads roads_bridges_highway
+~ hillshade
 mask mask_fill
 places city_label
 places places_label
