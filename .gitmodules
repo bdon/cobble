@@ -25,3 +25,6 @@
 [submodule "vendor/gzip-hpp"]
 	path = vendor/gzip-hpp
 	url = https://github.com/mapbox/gzip-hpp.git
+[submodule "vendor/mapnik-terrarium"]
+	path = vendor/mapnik-terrarium
+	url = https://github.com/protomaps/mapnik-terrarium.git
