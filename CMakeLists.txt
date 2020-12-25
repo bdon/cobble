@@ -7,7 +7,7 @@ set(CMAKE_CXX_FLAGS_DEBUG "-DDEBUG -g")
 set(CMAKE_CXX_FLAGS "-Wno-deprecated")
 set(CMAKE_CXX_FLAGS "-Wno-deprecated-declarations")
 set(CMAKE_CXX_FLAGS "-pthread")
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 17)
 set(CBBL_VERSION "0.0.1")
 
 include_directories(include)

@@ -137,8 +137,8 @@ void cmdServe(int argc, char * argv[]) {
                     }
                     Tile data_tile{data_z,data_x,data_y,meta_tile.scale};
                     auto tile_data = tSource->fetch(data_z,data_x,data_y);
-                    if(tile_data->ok) {
-                        auto img = cbbl::render(map_dir,meta_tile.z,meta_tile.x,meta_tile.y,meta_tile.scale,tile_data->body,data_tile.z,data_tile.x,data_tile.y,metatile_zdiff); // string might be inefficient
+                    if(tile_data) {
+                        auto img = cbbl::render(map_dir,meta_tile.z,meta_tile.x,meta_tile.y,meta_tile.scale,tile_data,data_tile.z,data_tile.x,data_tile.y,metatile_zdiff); // string might be inefficient
 
                         chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
                         cout << meta_tile.z << "/" << meta_tile.x << "/" << meta_tile.y <<  "@" << meta_tile.scale << ":" << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() << " ms" << endl;
@@ -166,7 +166,7 @@ void cmdServe(int argc, char * argv[]) {
                         }
                     } else {
                         // the tile will not render, meaning we need to evict the entire metatile and resolve all promises
-                        cout << "Error: " << tile_data->error << endl;
+                        cout << "Error: tile not found in any sources" << endl;
                         vector<pair<Tile,shared_ptr<HttpServer::Response>>> responses; 
                         {
                             lock_guard<mutex> lock(gMutex);

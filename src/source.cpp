@@ -17,12 +17,12 @@ unique_ptr<Source> CreateSource(const string &s) {
 HttpSource::HttpSource(const string &tile_url) : client(tile_url) {
 }
 
-const shared_ptr<TileData> HttpSource::fetch(int z, int x, int y) {
+const optional<string> HttpSource::fetch(int z, int x, int y) {
     ostringstream url_ss;
     url_ss << "/" <<  z << "/" << x << "/" << y << ".pbf";
     string url = url_ss.str();
     auto data_response = client.request("GET", url);
-    return make_shared<TileData>(data_response->content.string(),true,"");
+    return optional<string>(data_response->content.string());
 }
 
 HttpSource::~HttpSource() {
@@ -74,7 +74,7 @@ const tuple<string,string,string,string> MbtilesSource::bounds() {
     return {"-180","-90","180","90"};
 }
 
-const shared_ptr<TileData> MbtilesSource::fetch(int z, int x, int y) {
+const optional<string> MbtilesSource::fetch(int z, int x, int y) {
     sqlite3_bind_int(stmt,1,z);
     sqlite3_bind_int(stmt,2,x);
     sqlite3_bind_int(stmt,3,y);
@@ -84,11 +84,11 @@ const shared_ptr<TileData> MbtilesSource::fetch(int z, int x, int y) {
         string decompressed_data = gzip::decompress(res, num_bytes);
         sqlite3_clear_bindings(stmt);
         sqlite3_reset(stmt);
-        return make_shared<TileData>(move(decompressed_data),true,"");
+        return optional<string>(move(decompressed_data));
     } else {
         sqlite3_clear_bindings(stmt);
         sqlite3_reset(stmt);
-        return make_shared<TileData>("",false,"row not found");
+        return nullopt;
     }
 }
 
