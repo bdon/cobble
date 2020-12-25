@@ -8,6 +8,7 @@
 #include "vector_tile_projection.hpp"
 #include "vector_tile_tile.hpp"
 #include "vtzero/vector_tile.hpp"
+#include "terrarium_datasource.hpp"
 
 namespace cbbl {
 mapnik::image_rgba8 render(const std::string &map_dir, int z, int x, int y, int tile_scale, const protozero::data_view &data, int dz, int dx, int dy, int metatile_zdiff) {
@@ -23,6 +24,9 @@ mapnik::image_rgba8 render(const std::string &map_dir, int z, int x, int y, int 
         datasources[name] = std::make_shared<mapnik::vector_tile_impl::tile_datasource_pbf>(layer_reader,dx,dy,dz,false);
     }
 
+    std::shared_ptr<image_reader> reader(mapnik::get_image_reader("example/1.png","png"));
+    auto terrarium_datasource = std::make_shared<mapnik::terrarium_datasource>(reader,dx,dy,dz);
+
     std::ifstream in(map_dir + "/layers.txt");
     std::string line;
     while (std::getline(in,line)) {
@@ -32,6 +36,11 @@ mapnik::image_rgba8 render(const std::string &map_dir, int z, int x, int y, int 
         if (datasources.count(results[0])) {
             mapnik::layer lyr(results[1],map.srs());
             lyr.set_datasource(datasources.at(results[0]));
+            lyr.add_style(results[1]);
+            map.add_layer(lyr);
+        } else if (results[0] == "~") {
+            mapnik::layer lyr("~",map.srs());
+            lyr.set_datasource(terrarium_datasource);
             lyr.add_style(results[1]);
             map.add_layer(lyr);
         }
