@@ -4,11 +4,11 @@
 using namespace std;
 
 namespace cbbl {
-unique_ptr<Source> CreateSource(const string &s) {
+unique_ptr<Source> CreateSource(const string &s, bool gzip) {
     string ending = ".mbtiles";
     if (s.length() >= ending.length()) {
         if (0 == s.compare (s.length() - ending.length(), ending.length(), ending)) {
-            return make_unique<MbtilesSource>(s);
+            return make_unique<MbtilesSource>(s,gzip);
         }
     }
     return make_unique<HttpSource>(s);
@@ -29,7 +29,7 @@ HttpSource::~HttpSource() {
 
 }
 
-MbtilesSource::MbtilesSource(const string &path) {
+MbtilesSource::MbtilesSource(const string &path, bool gzip) : gzip_(gzip) {
     sqlite3_open_v2(path.c_str(), &db,SQLITE_OPEN_READONLY | SQLITE_OPEN_NOMUTEX,NULL);
     sqlite3_prepare_v2(db,  "SELECT tile_data FROM tiles WHERE zoom_level = ? AND tile_column = ? AND tile_row = ?", -1, &stmt, 0);
 }
@@ -81,10 +81,17 @@ const optional<string> MbtilesSource::fetch(int z, int x, int y) {
     if (SQLITE_ROW == sqlite3_step(stmt)) {
         const char* res = (char *)sqlite3_column_blob(stmt,0);
         int num_bytes = sqlite3_column_bytes(stmt,0);
-        string decompressed_data = gzip::decompress(res, num_bytes);
+
+        string data;
+        if (gzip_) {
+            data = gzip::decompress(res, num_bytes);
+        } else {
+            data = string(res,res+num_bytes);
+        }
+
         sqlite3_clear_bindings(stmt);
         sqlite3_reset(stmt);
-        return optional<string>(move(decompressed_data));
+        return optional<string>(move(data));
     } else {
         sqlite3_clear_bindings(stmt);
         sqlite3_reset(stmt);

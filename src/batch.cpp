@@ -46,11 +46,11 @@ void cmdBatch(int argc, char * argv[]) {
     for (auto r : resolutions) cout << " @" << r << "x";
     cout << endl;
 
-    auto v_source = cbbl::MbtilesSource(result["source"].as<string>());
+    auto v_source = cbbl::MbtilesSource(result["source"].as<string>(),true);
 
     unique_ptr<cbbl::Source> t_source;
     if (result.count("terrain")) {
-        t_source = make_unique<cbbl::MbtilesSource>(result["terrain"].as<string>());
+        t_source = make_unique<cbbl::MbtilesSource>(result["terrain"].as<string>(),false);
     }
 
     int total_tiles = 0;

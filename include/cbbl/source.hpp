@@ -16,7 +16,7 @@ class Source {
       virtual const std::tuple<std::string,std::string,std::string,std::string> bounds() { return {"-180","-90","180","90"}; };
 };
 
-std::unique_ptr<Source> CreateSource(const std::string &s);
+std::unique_ptr<Source> CreateSource(const std::string &s, bool gzip);
 
 class FileSource : public Source {
 
@@ -39,7 +39,7 @@ class MbtilesSource : public Source {
             sqlite3_stmt *stmt;
         };
 
-        MbtilesSource(const std::string &path);
+        MbtilesSource(const std::string &path, bool gzip);
         ~MbtilesSource(); 
         const std::optional<std::string> fetch(int z, int x, int y) override;
         const std::tuple<std::string,std::string,std::string> center() override;
@@ -50,7 +50,7 @@ class MbtilesSource : public Source {
     private:
         sqlite3 * db;
         sqlite3_stmt * stmt;
-
+        bool gzip_;
 };
 
 class HttpSource : public Source {

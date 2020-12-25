@@ -27,8 +27,11 @@ mapnik::image_rgba8 render(const std::string &map_dir, int z, int x, int y, int 
         }
     }
 
-    std::shared_ptr<image_reader> reader(mapnik::get_image_reader("example/1.png","png"));
-    auto terrarium_datasource = std::make_shared<mapnik::terrarium_datasource>(reader,dx,dy,dz);
+    std::shared_ptr<mapnik::terrarium_datasource> terrarium_datasource;
+    if (t_data) {
+        std::shared_ptr<image_reader> reader(mapnik::get_image_reader(t_data->data(),t_data->size()));
+        terrarium_datasource = std::make_shared<mapnik::terrarium_datasource>(reader,dx,dy,dz);
+    }
 
     std::ifstream in(map_dir + "/layers.txt");
     std::string line;
@@ -41,7 +44,7 @@ mapnik::image_rgba8 render(const std::string &map_dir, int z, int x, int y, int 
             lyr.set_datasource(datasources.at(results[0]));
             lyr.add_style(results[1]);
             map.add_layer(lyr);
-        } else if (results[0] == "~") {
+        } else if (terrarium_datasource && results[0] == "~") {
             mapnik::layer lyr("~",map.srs());
             lyr.set_datasource(terrarium_datasource);
             lyr.add_style(results[1]);

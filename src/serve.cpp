@@ -78,7 +78,7 @@ void cmdServe(int argc, char * argv[]) {
 
     bool cors = result.count("cors");
     auto v_source_str = result["source"].as<string>();
-    auto v_source = cbbl::CreateSource(v_source_str);
+    auto v_source = cbbl::CreateSource(v_source_str,true);
     auto bounds = v_source->bounds();
     auto center = v_source->center();
 
@@ -86,7 +86,7 @@ void cmdServe(int argc, char * argv[]) {
     if (result.count("terrain")) {
         t_source_str = optional<string>(result["terrain"].as<string>());
         // basic sanity check
-        auto t_source = cbbl::CreateSource(t_source_str.value());
+        auto t_source = cbbl::CreateSource(t_source_str.value(),false);
     }
 
     mapnik::logger::instance().set_severity(mapnik::logger::none);
@@ -132,8 +132,8 @@ void cmdServe(int argc, char * argv[]) {
                 v.emplace_back(display_tile,response);
                 mState.emplace(meta_tile,move(v));
                 asio::post(pool, [meta_tile,v_source_str,t_source_str,map_dir,cors,metatile_zdiff] {
-                    if (!tVectorSource) tVectorSource = cbbl::CreateSource(v_source_str);
-                    if (!tTerrainSource && t_source_str) tTerrainSource = cbbl::CreateSource(t_source_str.value());
+                    if (!tVectorSource) tVectorSource = cbbl::CreateSource(v_source_str,true);
+                    if (!tTerrainSource && t_source_str) tTerrainSource = cbbl::CreateSource(t_source_str.value(),false);
                     chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
                     // calculate the datatile for this metatile
                     int data_z = meta_tile.z;
