@@ -11,15 +11,15 @@
 #include "terrarium_datasource.hpp"
 
 namespace cbbl {
-mapnik::image_rgba8 render(const std::string &map_dir, int z, int x, int y, int tile_scale, const std::optional<std::string> &data, int dz, int dx, int dy, int metatile_zdiff) {
+mapnik::image_rgba8 render(const std::string &map_dir, int z, int x, int y, int tile_scale, const std::optional<std::string> &v_data, int dz, int dx, int dy, int metatile_zdiff) {
     int dim = 256 * tile_scale * (1 << metatile_zdiff);
     mapnik::Map map(dim,dim,mapnik::MAPNIK_GMERC_PROJ);
     map.set_buffer_size(64 * tile_scale);
 
     std::map<std::string,std::shared_ptr<mapnik::vector_tile_impl::tile_datasource_pbf>> datasources;
 
-    if (data) {
-        vtzero::vector_tile tile{data.value()};
+    if (v_data) {
+        vtzero::vector_tile tile{v_data.value()};
         while (auto layer = tile.next_layer()) {
             std::string name{layer.name()};
             protozero::pbf_reader layer_reader(layer.data());
