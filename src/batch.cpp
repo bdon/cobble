@@ -5,6 +5,7 @@
 #include "mapnik/image_view.hpp"
 #include "asio/thread_pool.hpp"
 #include "cbbl/source.hpp"
+#include "cbbl/sink.hpp"
 #include "cbbl/tile.hpp"
 #include "cbbl/viewer.hpp"
 
@@ -71,7 +72,6 @@ void cmdBatch(int argc, char * argv[]) {
     char ans = 'N';
     cin >> ans;
 
-    // set up output
     auto output = result["destination"].as<string>();
     if (boost::filesystem::exists(output) && !result.count("overwrite")) {
         cout << "Target output " << output << " exists." << endl;
@@ -80,6 +80,9 @@ void cmdBatch(int argc, char * argv[]) {
     if (boost::filesystem::exists(output)) {
         boost::filesystem::remove_all(output);
     }
+
+    auto sink = cbbl::CreateSink(result["destination"].as<string>());
+
 
     string map_dir = "example";
     if (result.count("map")) map_dir = result["map"].as<string>();
@@ -91,42 +94,12 @@ void cmdBatch(int argc, char * argv[]) {
     }
 
     auto iter = cbbl::MbtilesSource::Iterator(source);
-    boost::filesystem::create_directory(output);
 
     int threads = 4;
     if (result.count("threads")) threads = result["threads"].as<int>();
     asio::thread_pool pool(threads);
 
     chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
-
-    set<string> created_dirs;
-    mutex created_dirs_mutex;
-
-    auto writeTile = [&output, &created_dirs, &created_dirs_mutex](int res, int z, int x, int y, const string& buf) {
-        string z_dir = output + "/" + to_string(z);
-        string zx_dir = output + "/" + to_string(z) + "/" + to_string(x);
-        {
-            lock_guard<mutex> lock(created_dirs_mutex);
-            if (!created_dirs.count(z_dir)) {
-                boost::filesystem::create_directory(z_dir);
-                created_dirs.insert(z_dir);
-            }
-            if (!created_dirs.count(zx_dir)) {
-                boost::filesystem::create_directory(zx_dir);
-                created_dirs.insert(zx_dir);
-            }
-        }
-        ofstream outfile;
-        stringstream tile_name;
-        tile_name << output + "/" + to_string(z) + "/" + to_string(x) + "/" + to_string(y);
-        if (res > 1) {
-            tile_name << "@" << res << "x";
-        }
-        tile_name << ".png";
-        outfile.open(tile_name.str());
-        outfile << buf << endl;
-        outfile.close();
-    };
 
     while (iter.next()) {
         int data_z = iter.z;
@@ -135,7 +108,7 @@ void cmdBatch(int argc, char * argv[]) {
         int data_y = iter.y;
         string data = iter.data;
 
-        asio::post(pool, [&writeTile,&resolutions,&output,&map_dir,data_z,data_x,data_y,data,&created_dirs,&created_dirs_mutex,maxzoom] {
+        asio::post(pool, [&sink,&resolutions,&map_dir,data_z,data_x,data_y,data,maxzoom] {
             for (size_t res : resolutions) { // 1, 2 or 3
                 // metatile = datatile
                 auto img = cbbl::render(map_dir,data_z,data_x,data_y,res,data,data_z,data_x,data_y,2);
@@ -146,7 +119,7 @@ void cmdBatch(int argc, char * argv[]) {
                         int display_z = data_z + 2;
                         int display_x = data_x * 4 + i;
                         int display_y = data_y * 4 + j;
-                        writeTile(res,display_z,display_x,display_y,buf);
+                        sink->writeTile(res,display_z,display_x,display_y,buf);
                     }
                 }
 
@@ -158,7 +131,7 @@ void cmdBatch(int argc, char * argv[]) {
                             for (int j = 0; j < 2; j++) {
                                 mapnik::image_view_rgba8 cropped{256*res*i,256*res*j,256*res,256*res,img};
                                 auto buf = mapnik::save_to_string(cropped,"png");
-                                writeTile(res,1,i,j,buf);
+                                sink->writeTile(res,1,i,j,buf);
                             }
                         }
                     }
@@ -166,7 +139,7 @@ void cmdBatch(int argc, char * argv[]) {
                     {
                         auto img = cbbl::render(map_dir,0,0,0,res,data,0,0,0,0);
                         auto buf = mapnik::save_to_string(img,"png");
-                        writeTile(res,0,0,0,buf);
+                        sink->writeTile(res,0,0,0,buf);
                     }
                 }
 
@@ -186,7 +159,7 @@ void cmdBatch(int argc, char * argv[]) {
                                         int display_z = meta_z + 2;
                                         int display_x = meta_x * 4 + i;
                                         int display_y = meta_y * 4 + j;
-                                        writeTile(res,display_z,display_x,display_y,buf);
+                                        sink->writeTile(res,display_z,display_x,display_y,buf);
                                     }
                                 }
                             }

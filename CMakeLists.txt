@@ -34,7 +34,7 @@ else()
 set(CMAKE_INSTALL_RPATH "$ORIGIN")
 endif()
 
-add_executable(cbbl src/cmd.cpp src/tile.cpp src/source.cpp src/serve.cpp src/batch.cpp)
+add_executable(cbbl src/cmd.cpp src/tile.cpp src/source.cpp src/sink.cpp src/serve.cpp src/batch.cpp)
 target_link_libraries(cbbl mapnik icuuc sqlite3 z boost_filesystem)
 
 add_custom_target(archive COMMAND dist/archive.sh ${CBBL_VERSION} ${CMAKE_SYSTEM_NAME})
