@@ -1,6 +1,7 @@
 #include "boost/filesystem.hpp"
 #include "cbbl/sink.hpp"
 #include <sstream>
+#include <iostream>
 
 using namespace std;
 
@@ -15,12 +16,30 @@ unique_ptr<Sink> CreateSink(const string &s) {
     return make_unique<FileSink>(s);
 }
 
-MbtilesSink::MbtilesSink(const string& s) {
+MbtilesSink::MbtilesSink(const string& s) : mOutput(s) {
+    sqlite3_open(mOutput.c_str(), &mDb);
+    char * sErrMsg = 0;
+    sqlite3_exec(mDb, "BEGIN TRANSACTION", NULL, NULL, &sErrMsg);
+    sqlite3_exec(mDb, "CREATE TABLE tiles (zoom_level integer, tile_column integer, tile_row integer, tile_data blob)", NULL, NULL, &sErrMsg);
+    sqlite3_prepare_v2(mDb,  "INSERT INTO tiles VALUES (?,?,?,?)", -1, &mStmt, 0);
+}
 
+MbtilesSink::~MbtilesSink() {
+    char * sErrMsg = 0;
+    sqlite3_exec(mDb, "END TRANSACTION", NULL, NULL, &sErrMsg);
+    sqlite3_exec(mDb, "CREATE UNIQUE INDEX tile_index on tiles (zoom_level, tile_column, tile_row);", NULL, NULL, &sErrMsg);
+    sqlite3_finalize(mStmt);
+    sqlite3_close(mDb);
 }
 
 void MbtilesSink::writeTile(int res, int z, int x, int y, const string& buf) {
-
+    sqlite3_bind_int(mStmt,1,z);
+    sqlite3_bind_int(mStmt,2,x);
+    sqlite3_bind_int(mStmt,3,y);
+    sqlite3_bind_blob(mStmt,4,buf.data(),buf.size(),SQLITE_STATIC);
+    sqlite3_step(mStmt);
+    sqlite3_clear_bindings(mStmt);
+    sqlite3_reset(mStmt);
 }
 
 FileSink::FileSink(const string& s) : mOutput(s) {

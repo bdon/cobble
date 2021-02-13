@@ -3,6 +3,7 @@
 #include <memory>
 #include <set>
 #include <mutex>
+#include <sqlite3.h>
 
 namespace cbbl {
 class Sink {
@@ -28,9 +29,13 @@ class FileSink : public Sink {
 class MbtilesSink : public Sink {
     public:
     MbtilesSink(const std::string &path);
-    ~MbtilesSink() {}
-    virtual 
+    ~MbtilesSink();
     void writeTile(int res, int z, int x, int y, const std::string& buf) override;
+
+    private:
+    std::string mOutput;
+    sqlite3 * mDb;
+    sqlite3_stmt * mStmt;
 };
 
 }
