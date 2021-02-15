@@ -32,6 +32,21 @@ MbtilesSink::~MbtilesSink() {
     sqlite3_close(mDb);
 }
 
+void MbtilesSink::writeMetadata(const map<string,string> &metadata) {
+    char * sErrMsg = 0;
+    sqlite3_stmt * stmt;
+    sqlite3_exec(mDb, "CREATE TABLE metadata (name text, value text)", NULL, NULL, &sErrMsg);
+    sqlite3_prepare_v2(mDb,  "INSERT INTO metadata VALUES (?,?)", -1, &stmt, 0);
+    for (auto const &pair : metadata) {
+        sqlite3_bind_text(stmt,1,pair.first.c_str(),pair.first.size(),SQLITE_STATIC);
+        sqlite3_bind_text(stmt,2,pair.second.c_str(),pair.second.size(),SQLITE_STATIC);
+        sqlite3_step(stmt);
+        sqlite3_clear_bindings(stmt);
+        sqlite3_reset(stmt);
+    }
+    sqlite3_finalize(stmt);
+}
+
 void MbtilesSink::writeTile(int res, int z, int x, int y, const string& buf) {
     sqlite3_bind_int(mStmt,1,z);
     sqlite3_bind_int(mStmt,2,x);

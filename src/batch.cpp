@@ -83,6 +83,10 @@ void cmdBatch(int argc, char * argv[]) {
 
     auto sink = cbbl::CreateSink(result["destination"].as<string>());
 
+    auto metadata = source.metadata();
+    metadata["maxzoom"] = to_string(maxzoom);
+    metadata["format"] = "png";
+    sink->writeMetadata(metadata);
 
     string map_dir = "example";
     if (result.count("map")) map_dir = result["map"].as<string>();

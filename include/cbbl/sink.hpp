@@ -9,6 +9,7 @@ namespace cbbl {
 class Sink {
     public:
     virtual void writeTile(int res, int z, int x, int y, const std::string& buf) = 0;
+    virtual void writeMetadata(const std::map<std::string,std::string>& metadata) { };
     virtual ~Sink() {};
 };
 
@@ -31,6 +32,7 @@ class MbtilesSink : public Sink {
     MbtilesSink(const std::string &path);
     ~MbtilesSink();
     void writeTile(int res, int z, int x, int y, const std::string& buf) override;
+    void writeMetadata(const std::map<std::string,std::string>& metadata) override;
 
     private:
     std::string mOutput;

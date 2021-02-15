@@ -20,6 +20,7 @@ class Source {
    public:
       virtual const std::shared_ptr<TileData> fetch(int z, int x, int y) = 0;
       virtual ~Source() {}
+      virtual const std::map<std::string,std::string> metadata() { return {}; }
       virtual const std::tuple<std::string,std::string,std::string> center() { return {"0","0","0"}; };
       virtual const std::tuple<std::string,std::string,std::string,std::string> bounds() { return {"-180","-90","180","90"}; };
 };
@@ -52,6 +53,7 @@ class MbtilesSource : public Source {
         const std::shared_ptr<TileData> fetch(int z, int x, int y) override;
         const std::tuple<std::string,std::string,std::string> center() override;
         const std::tuple<std::string,std::string,std::string,std::string> bounds() override;
+        const std::map<std::string,std::string> metadata() override;
 
         const std::vector<std::pair<int,int>> zoom_count();
 

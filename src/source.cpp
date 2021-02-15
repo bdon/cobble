@@ -34,6 +34,18 @@ MbtilesSource::MbtilesSource(const string &path) {
     sqlite3_prepare_v2(db,  "SELECT tile_data FROM tiles WHERE zoom_level = ? AND tile_column = ? AND tile_row = ?", -1, &stmt, 0);
 }
 
+const map<string,string> MbtilesSource::metadata() {
+    sqlite3_stmt * metadata_stmt;
+    map<string,string> result;
+    sqlite3_prepare_v2(db,  "SELECT name, value FROM metadata", -1, &metadata_stmt, 0);
+    while (SQLITE_ROW == sqlite3_step(metadata_stmt)) {
+        const char* name = (char *)sqlite3_column_text(metadata_stmt,0);
+        const char* value = (char *)sqlite3_column_text(metadata_stmt,1);
+        result[name] = value;
+    }
+    return result;
+}
+
 const tuple<string,string,string> MbtilesSource::center() {
     sqlite3_stmt * metadata_stmt;
     sqlite3_prepare_v2(db,  "SELECT value FROM metadata WHERE name = \"center\"", -1, &metadata_stmt, 0);
