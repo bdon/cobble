@@ -1,6 +1,7 @@
 #include <set>
 #include "cxxopts.hpp"
 #include "boost/filesystem.hpp"
+#include "boost/timer/progress_display.hpp"
 #include "mapnik/font_engine_freetype.hpp"
 #include "mapnik/image_view.hpp"
 #include "asio/thread_pool.hpp"
@@ -48,27 +49,27 @@ void cmdBatch(int argc, char * argv[]) {
 
     auto source = cbbl::MbtilesSource(result["source"].as<string>());
 
-    int total_tiles = 0;
+    int total_output_tiles = 0;
     int num_resolutions = resolutions.size();
 
     for (auto p : source.zoom_count()) {
         int zoom_level = get<0>(p);
         int count = get<1>(p);
         if (zoom_level == 0) {
-            total_tiles += (16 + 4 + 1) * num_resolutions;
+            total_output_tiles += (16 + 4 + 1) * num_resolutions;
         } else if (zoom_level < 14) {
             if (zoom_level <= maxzoom - 2) {
-                total_tiles += count * 16 * num_resolutions;
+                total_output_tiles += count * 16 * num_resolutions;
             }
         } else {
             // zoom level == 14
             for (int z = 16; z <= maxzoom; z++) {
-                total_tiles += count * (2 << (z - 16)) * 16 * num_resolutions;
+                total_output_tiles += count * (2 << (z - 16)) * 16 * num_resolutions;
             }
         }
     }
 
-    cout << "Total tiles: " << total_tiles << " Continue? (N) :";
+    cout << "Total output tiles: " << total_output_tiles << " Continue? (N) :";
     char ans = 'N';
     cin >> ans;
 
@@ -105,6 +106,7 @@ void cmdBatch(int argc, char * argv[]) {
 
     chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
 
+    boost::timer::progress_display show_progress( total_output_tiles );
     while (iter.next()) {
         int data_z = iter.z;
         if (data_z > maxzoom - 2) continue;
@@ -112,7 +114,7 @@ void cmdBatch(int argc, char * argv[]) {
         int data_y = iter.y;
         string data = iter.data;
 
-        asio::post(pool, [&sink,&resolutions,&map_dir,data_z,data_x,data_y,data,maxzoom] {
+        asio::post(pool, [&show_progress,&sink,&resolutions,&map_dir,data_z,data_x,data_y,data,maxzoom] {
             for (size_t res : resolutions) { // 1, 2 or 3
                 // metatile = datatile
                 auto img = cbbl::render(map_dir,data_z,data_x,data_y,res,data,data_z,data_x,data_y,2);
@@ -124,6 +126,7 @@ void cmdBatch(int argc, char * argv[]) {
                         int display_x = data_x * 4 + i;
                         int display_y = data_y * 4 + j;
                         sink->writeTile(res,display_z,display_x,display_y,buf);
+                        ++show_progress;
                     }
                 }
 
@@ -136,6 +139,7 @@ void cmdBatch(int argc, char * argv[]) {
                                 mapnik::image_view_rgba8 cropped{256*res*i,256*res*j,256*res,256*res,img};
                                 auto buf = mapnik::save_to_string(cropped,"png");
                                 sink->writeTile(res,1,i,j,buf);
+                                ++show_progress;
                             }
                         }
                     }
@@ -144,10 +148,12 @@ void cmdBatch(int argc, char * argv[]) {
                         auto img = cbbl::render(map_dir,0,0,0,res,data,0,0,0,0);
                         auto buf = mapnik::save_to_string(img,"png");
                         sink->writeTile(res,0,0,0,buf);
+                        ++show_progress;
                     }
                 }
 
                 // TODO special case data tile 14: it outputs 17 to maxzoom
+                // TODO deduplication optimizations
                 if (data_z == 14) {
                     for (int meta_z = 15; meta_z <= maxzoom - 2; meta_z++) {
                         int diff = meta_z - 14;
@@ -164,6 +170,7 @@ void cmdBatch(int argc, char * argv[]) {
                                         int display_x = meta_x * 4 + i;
                                         int display_y = meta_y * 4 + j;
                                         sink->writeTile(res,display_z,display_x,display_y,buf);
+                                        ++show_progress;
                                     }
                                 }
                             }
