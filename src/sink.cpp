@@ -21,14 +21,12 @@ MbtilesSink::MbtilesSink(const string& s) : mOutput(s) {
     char * sErrMsg = 0;
     sqlite3_exec(mDb, "BEGIN TRANSACTION", NULL, NULL, &sErrMsg);
     sqlite3_exec(mDb, "CREATE TABLE tiles (zoom_level integer, tile_column integer, tile_row integer, tile_data blob)", NULL, NULL, &sErrMsg);
-    sqlite3_prepare_v2(mDb,  "INSERT INTO tiles VALUES (?,?,?,?)", -1, &mStmt, 0);
 }
 
 MbtilesSink::~MbtilesSink() {
     char * sErrMsg = 0;
     sqlite3_exec(mDb, "END TRANSACTION", NULL, NULL, &sErrMsg);
     sqlite3_exec(mDb, "CREATE UNIQUE INDEX tile_index on tiles (zoom_level, tile_column, tile_row);", NULL, NULL, &sErrMsg);
-    sqlite3_finalize(mStmt);
     sqlite3_close(mDb);
 }
 
@@ -48,13 +46,15 @@ void MbtilesSink::writeMetadata(const map<string,string> &metadata) {
 }
 
 void MbtilesSink::writeTile(int res, int z, int x, int y, const string& buf) {
-    sqlite3_bind_int(mStmt,1,z);
-    sqlite3_bind_int(mStmt,2,x);
-    sqlite3_bind_int(mStmt,3,y);
-    sqlite3_bind_blob(mStmt,4,buf.data(),buf.size(),SQLITE_STATIC);
-    sqlite3_step(mStmt);
-    sqlite3_clear_bindings(mStmt);
-    sqlite3_reset(mStmt);
+    char * sErrMsg = 0;
+    sqlite3_stmt * stmt;
+    sqlite3_prepare_v2(mDb,  "INSERT INTO tiles VALUES (?,?,?,?)", -1, &stmt, 0);
+    sqlite3_bind_int(stmt,1,z);
+    sqlite3_bind_int(stmt,2,x);
+    sqlite3_bind_int(stmt,3,y);
+    sqlite3_bind_blob(stmt,4,buf.data(),buf.size(),SQLITE_STATIC);
+    sqlite3_step(stmt);
+    sqlite3_finalize(stmt);
 }
 
 FileSink::FileSink(const string& s) : mOutput(s) {

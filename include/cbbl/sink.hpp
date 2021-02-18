@@ -37,7 +37,6 @@ class MbtilesSink : public Sink {
     private:
     std::string mOutput;
     sqlite3 * mDb;
-    sqlite3_stmt * mStmt;
 };
 
 }
