@@ -113,6 +113,7 @@ void cmdBatch(int argc, char * argv[]) {
         int data_x = iter.x;
         int data_y = iter.y;
         string data = iter.data;
+        // TODO special case the empty tile to short-circuit 
 
         asio::post(pool, [&show_progress,&sink,&resolutions,&map_dir,data_z,data_x,data_y,data,maxzoom] {
             for (size_t res : resolutions) { // 1, 2 or 3
@@ -152,8 +153,8 @@ void cmdBatch(int argc, char * argv[]) {
                     }
                 }
 
-                // TODO special case data tile 14: it outputs 17 to maxzoom
-                // TODO deduplication optimizations
+                // special case data tile 14: it outputs 17 to maxzoom
+                // TODO deduplication optimizations: if the relevant part of the tile is empty, don't call Mapnik
                 if (data_z == 14) {
                     for (int meta_z = 15; meta_z <= maxzoom - 2; meta_z++) {
                         int diff = meta_z - 14;
